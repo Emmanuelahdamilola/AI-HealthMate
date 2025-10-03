@@ -1,19 +1,29 @@
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+// middleware.ts
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-const isPublicRoute = createRouteMatcher(['/sign-in(.*)', '/sign-up(.*)'])
+const publicRoutes = ["/sign-in", "/sign-up"];
 
-export default clerkMiddleware(async(auth, req) =>{
-  if (!isPublicRoute(req)){
-    await auth.protect()
+export function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+
+  // Skip public routes
+  if (publicRoutes.some(route => pathname.startsWith(route))) {
+    return NextResponse.next();
   }
-});
 
+  // Check if token exists in cookies
+  const token = req.cookies.get("token")?.value;
+  if (!token) {
+    return NextResponse.redirect(new URL("/sign-in", req.url));
+  }
+
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    // Always run for API routes
-    '/(api|trpc)(.*)',
+    "/((?!_next|.*\\.(?:jpg|jpeg|png|svg|ico|css|js|json|woff2?|ttf)).*)",
+    "/(api|trpc)(.*)",
   ],
 };

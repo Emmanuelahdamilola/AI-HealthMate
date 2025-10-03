@@ -1,21 +1,20 @@
-"use client";
 
-import { useContext } from "react";
-import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-// import Header from "../examples/Header";
-import { UserDetailContext } from "@/context/UserDetailProvider";
-import Header from "./(routes)/dashboard/_components/Header";
+'use client';
+
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@clerk/nextjs';
+import { motion } from 'framer-motion';
+import Header from './Header';
 
 export default function Home() {
   const router = useRouter();
-  const context = useContext(UserDetailContext);
+  const { isSignedIn } = useAuth();
 
   const handleStartSession = () => {
-    if (context?.user) {
-      router.push("/dashboard");
+    if (isSignedIn) {
+      router.push('/dashboard');
     } else {
-      router.push("/sign-in");
+      router.push('/sign-up');
     }
   };
 
@@ -31,8 +30,8 @@ export default function Home() {
             .map((word, i) => (
               <motion.span
                 key={i}
-                initial={{ opacity: 0, y: 10, filter: "blur(4px)" }}
-                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                initial={{ opacity: 0, y: 10, filter: 'blur(4px)' }}
+                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                 transition={{ delay: i * 0.08, duration: 0.4 }}
                 className="inline-block mr-2"
               >
@@ -66,7 +65,7 @@ export default function Home() {
       </div>
 
       {/* Medical Disclaimer */}
-      <footer className="absolute bottom-4 px-4 text-center text-s text-neutral-400 max-w-md">
+      <footer className="absolute bottom-4 px-4 text-center text-xs text-neutral-400 max-w-md">
         <p>
           <strong>Disclaimer:</strong> AI HealthMate is not a substitute for professional medical advice, diagnosis, or treatment. Always consult a qualified healthcare provider with any questions you may have regarding a medical condition.
         </p>

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { UserDetailProvider } from '@/context/userContext';
+import { UserDetailProvider } from '@/context/UserDetailProvider';
 
 
 export type UsersDetail = {

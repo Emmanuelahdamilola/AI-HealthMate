@@ -1,32 +1,28 @@
+
 'use client';
 
+import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
-import { useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 import MedicalReport from '../_components/MedicalReport';
 import { SessionParams } from '../medical-voice/[sessionId]/page';
-import { UserDetailContext } from '@/context/UserDetailProvider';
 
 export default function HistoryPage() {
+  const { isSignedIn } = useAuth();
   const router = useRouter();
-  const context = useContext(UserDetailContext);
-  const user = context?.user;
-
   const [history, setHistory] = useState<SessionParams[] | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
+    if (!isSignedIn) {
       router.push('/sign-in');
       return;
     }
 
     const fetchHistory = async () => {
       try {
-        const token = await user.getIdToken();
-        const res = await axios.get('/api/chat-session?sessionId=all', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await axios.get('/api/chat-session?sessionId=all');
         setHistory(res.data);
       } catch (err) {
         console.error('Error fetching history:', err);
@@ -36,9 +32,9 @@ export default function HistoryPage() {
     };
 
     fetchHistory();
-  }, [user, router]);
+  }, [isSignedIn, router]);
 
-  if (!user || loading) {
+  if (!isSignedIn || loading) {
     return <p className="text-center mt-10 text-gray-500">Loading your consultation history...</p>;
   }
 
