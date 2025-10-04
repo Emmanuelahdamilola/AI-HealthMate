@@ -314,20 +314,370 @@
 
 
 
+// 'use client';
+// import axios from 'axios';
+// import { useParams, useRouter } from 'next/navigation';
+// import React, { useEffect, useState } from 'react';
+// import { AiDoctorAgent } from '../../_components/AiDoctorAgentCard';
+// import Image from 'next/image';
+// import { Circle, Loader, PhoneCall, PhoneOff } from 'lucide-react';
+// import { Button } from '@/components/ui/button';
+// import Vapi from '@vapi-ai/web';
+// import jsPDF from 'jspdf';
+// import { motion } from 'framer-motion';
+// import { toast } from 'sonner';
+// import { getAuth } from 'firebase/auth';
+// import { auth } from '@/lib/firebase'; // ✅ make sure path matches your setup
+
+// type ReportType = {
+//   sessionId: string;
+//   agent: string;
+//   user: string;
+//   timestamp: string;
+//   mainComplaint: string;
+//   symptoms: string[];
+//   summary: string;
+//   duration: string;
+//   severity: string;
+//   medicationsMentioned: string[];
+//   recommendations: string[];
+// };
+
+// export type SessionParams = {
+//   id: number;
+//   note: string;
+//   sessionId: string;
+//   selectedDoctor?: AiDoctorAgent;
+//   report?: ReportType;
+//   createdOn: string;
+//   status: string;
+// };
+
+// type Message = {
+//   role: string;
+//   text: string;
+// };
+
+// export default function MedicalVoice() {
+//   const { sessionId } = useParams();
+//   const router = useRouter();
+
+//   const [sessionParams, setSessionParams] = useState<SessionParams | null>(null);
+//   const [startCall, setStartCall] = useState(false);
+//   const [vapiInstance, setVapiInstance] = useState<any>(null);
+//   const [speaking, setSpeaking] = useState<string | null>(null);
+//   const [transcript, setTranscript] = useState<string>('');
+//   const [messages, setMessages] = useState<Message[]>([]);
+//   const [loading, setLoading] = useState<boolean>(false);
+//   const [voiceAnimating, setVoiceAnimating] = useState(false);
+//   const [listeningPaused, setListeningPaused] = useState<boolean>(false);
+
+//   // ✅ Fetch session securely
+//   useEffect(() => {
+//     if (sessionId) fetchSessionDetails();
+//   }, [sessionId]);
+
+//   const fetchSessionDetails = async () => {
+//     try {
+//       setLoading(true);
+
+//       const user = getAuth().currentUser;
+//       if (!user) {
+//         toast.error('Please sign in again.');
+//         return;
+//       }
+
+//       const token = await user.getIdToken();
+
+//       const result = await axios.get(`/api/chat-session?sessionId=${sessionId}`, {
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//         },
+//       });
+
+//       // ✅ Handle all response cases
+//       if (!result.data?.success) {
+//         toast.error(result.data?.error || 'Failed to fetch session.');
+//         return;
+//       }
+
+//       const sessionData = result.data?.data;
+
+//       if (!sessionData) {
+//         toast.error('No session data found.');
+//         return;
+//       }
+
+//       // ✅ Set session details
+//       setSessionParams(sessionData);
+//     } catch (err: any) {
+//       console.error('❌ Fetch session failed:', err);
+//       toast.error('Failed to fetch session.');
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const handleCallStart = () => setStartCall(true);
+//   const handleCallEnd = () => setStartCall(false);
+
+//   const handleMessage = (message: any) => {
+//     if (message.type === 'transcript') {
+//       const { role, transcriptType, transcript } = message;
+//       if (transcriptType === 'partial') {
+//         setTranscript(transcript);
+//         setSpeaking(role);
+//         setVoiceAnimating(true);
+//       } else if (transcriptType === 'final' && transcript?.trim()) {
+//         setMessages((prev) => [...prev, { role, text: transcript }]);
+//         setTranscript('');
+//         setSpeaking(null);
+//         setVoiceAnimating(false);
+
+//         if (role === 'assistant') {
+//           setListeningPaused(true);
+//           setTimeout(() => setListeningPaused(false), 1500);
+//         }
+//       }
+//     }
+//   };
+
+//   const StartCall = async () => {
+//     if (!sessionParams) {
+//       toast.error('Session data not ready.');
+//       return;
+//     }
+
+//     setLoading(true);
+
+//     try {
+//       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+//       stream.getTracks().forEach((track) => track.stop());
+//     } catch {
+//       toast.error('Please allow microphone access.');
+//       setLoading(false);
+//       return;
+//     }
+
+//     const vapi = new Vapi(process.env.NEXT_PUBLIC_VAPI_ASSISTANT_API_KEY!);
+//     setVapiInstance(vapi);
+
+//     const voiceId =
+//       sessionParams?.selectedDoctor?.doctorVoiceId ||
+//       's3://default-voice'; // fallback voice
+
+//     const VapiVoiceConfig = {
+//       name: 'AI Medical Assistant',
+//       firstMessage: 'Hello, I’m your AI Medical Assistant. How can I help you today?',
+//       transcriber: {
+//         provider: 'assembly-ai',
+//         language: 'en',
+//       },
+//       voice: {
+//         provider: 'openai', // ✅ must match Vapi dashboard provider
+//         voiceId: 'nova', // ✅ supported OpenAI voice
+//       },
+//       model: {
+//         provider: "openai", // ✅ same provider as voice
+//         model: "gpt-4.1-mini", // ✅ your dashboard model
+//         messages: [
+//           {
+//             role: 'system',
+//             content:
+//               sessionParams?.selectedDoctor?.agentPrompt ||
+//               'You are an AI medical assistant. Be helpful and empathetic.',
+//           },
+//         ],
+//       },
+//     };
+
+
+//     console.log('Starting Vapi with:', VapiVoiceConfig);
+
+//     try {
+//       // @ts-ignore
+//       vapi.start(VapiVoiceConfig);
+//     } catch (error: any) {
+//       toast.error(`Vapi start failed: ${error.message}`);
+//       setLoading(false);
+//       return;
+//     }
+
+//     vapi.on('call-start', () => {
+//       handleCallStart();
+//       toast.success('Consultation started');
+//     });
+
+//     vapi.on('call-end', () => {
+//       handleCallEnd();
+//     });
+
+//     vapi.on('message', (msg) => handleMessage(msg));
+
+//     vapi.on("error", (error: any) => {
+//       console.error("❗ Vapi Error:", JSON.stringify(error, null, 2));
+//       toast.error("Voice assistant error occurred. Check console for details.");
+//     });
+
+
+//     setLoading(false);
+//   };
+
+//   const endCall = async () => {
+//     if (!vapiInstance) return;
+//     vapiInstance.stop();
+//     setStartCall(false);
+//     setVapiInstance(null);
+//     toast.success('Consultation ended.');
+//   };
+
+//   const exportTranscriptAsPDF = () => {
+//     const pdf = new jsPDF();
+//     pdf.setFontSize(14);
+//     pdf.text('Consultation Transcript', 10, 10);
+//     messages.forEach((msg, index) => {
+//       pdf.text(`${msg.role.toUpperCase()}: ${msg.text}`, 10, 20 + index * 10);
+//     });
+//     pdf.save('consultation_transcript.pdf');
+//   };
+
+//   if (loading) {
+//     return (
+//       <div className="flex justify-center items-center h-screen text-white">
+//         <Loader className="animate-spin mr-2" /> Loading session...
+//       </div>
+//     );
+//   }
+
+//   if (!sessionParams) {
+//     return (
+//       <div className="flex justify-center items-center h-screen text-gray-400">
+//         No session data found.
+//       </div>
+//     );
+//   }
+
+//   const doctor = sessionParams?.selectedDoctor;
+
+//   return (
+//     <motion.div
+//       className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-6 flex flex-col items-center"
+//       initial={{ opacity: 0 }}
+//       animate={{ opacity: 1 }}
+//       transition={{ duration: 0.6 }}
+//     >
+//       <motion.h2
+//         className="text-3xl font-bold mb-8 text-center bg-gradient-to-br from-purple-100 to-blue-200 bg-clip-text text-transparent"
+//         initial={{ y: -30, opacity: 0 }}
+//         animate={{ y: 0, opacity: 1 }}
+//         transition={{ duration: 0.5 }}
+//       >
+//         Voice Consultation Session
+//       </motion.h2>
+
+//       <motion.div
+//         className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-5xl"
+//         initial={{ opacity: 0 }}
+//         animate={{ opacity: 1 }}
+//         transition={{ delay: 0.3 }}
+//       >
+//         <motion.div
+//           className="bg-gray-800 rounded-2xl shadow-xl p-6 flex flex-col items-center"
+//           whileHover={{ scale: 1.02 }}
+//         >
+//           {doctor?.image && (
+//             <Image
+//               src={doctor.image}
+//               alt={doctor?.name || 'Doctor'}
+//               width={90}
+//               height={90}
+//               className="rounded-full border-4 border-blue-400 shadow-lg"
+//             />
+//           )}
+//           <h3 className="text-xl font-semibold mt-4 text-center">
+//             {doctor?.name || 'Unknown Doctor'}
+//           </h3>
+//           <p className="text-sm text-gray-400">
+//             Specialty: {doctor?.specialty || 'N/A'}
+//           </p>
+//           <div className="flex items-center gap-3 mt-3">
+//             <span className="text-gray-400 text-sm">
+//               Created: {new Date(sessionParams?.createdOn).toLocaleDateString()}
+//             </span>
+//             <span className="flex items-center gap-1 text-sm">
+//               <Circle
+//                 className={`w-3 h-3 ${startCall ? 'text-green-400' : 'text-red-400'
+//                   }`}
+//               />
+//               {startCall ? 'Online' : 'Offline'}
+//             </span>
+//           </div>
+//         </motion.div>
+
+//         <div className="bg-gray-800 rounded-2xl shadow-xl p-6">
+//           <h4 className="text-lg font-semibold mb-3">Consultation Transcript</h4>
+//           <div className="space-y-2 max-h-60 overflow-y-auto">
+//             {messages.slice(-6).map((msg, idx) => (
+//               <motion.p
+//                 key={idx}
+//                 className="text-gray-300 text-sm"
+//                 initial={{ x: -20, opacity: 0 }}
+//                 animate={{ x: 0, opacity: 1 }}
+//                 transition={{ delay: idx * 0.1 }}
+//               >
+//                 <strong>{msg.role}:</strong> {msg.text}
+//               </motion.p>
+//             ))}
+//             {transcript && (
+//               <motion.p className="text-blue-400 font-medium">
+//                 {speaking}: {transcript}
+//               </motion.p>
+//             )}
+//           </div>
+
+//           {voiceAnimating && (
+//             <div className="w-8 h-8 rounded-full border-4 border-blue-400 animate-ping mx-auto my-4"></div>
+//           )}
+
+//           <div className="mt-6 flex flex-col gap-3">
+//             {!startCall ? (
+//               <Button onClick={StartCall} disabled={loading}>
+//                 {loading ? <Loader className="animate-spin" /> : <PhoneCall />} Start Consultation
+//               </Button>
+//             ) : (
+//               <Button variant="destructive" onClick={endCall} disabled={loading}>
+//                 {loading ? <Loader className="animate-spin" /> : <PhoneOff />} End Consultation
+//               </Button>
+//             )}
+
+//             <Button
+//               variant="outline"
+//               onClick={exportTranscriptAsPDF}
+//               className="mt-2 text-gray-600"
+//             >
+//               Export as PDF
+//             </Button>
+//           </div>
+//         </div>
+//       </motion.div>
+//     </motion.div>
+//   );
+// }
+
+
 'use client';
+import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
-import { useParams, useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
-import { AiDoctorAgent } from '../../_components/AiDoctorAgentCard';
 import Image from 'next/image';
-import { Circle, Loader, PhoneCall, PhoneOff } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useParams } from 'next/navigation';
 import Vapi from '@vapi-ai/web';
-import jsPDF from 'jspdf';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Loader, PhoneCall, PhoneOff, Circle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import jsPDF from 'jspdf';
 import { getAuth } from 'firebase/auth';
-import { auth } from '@/lib/firebase'; // ✅ make sure path matches your setup
+import { auth } from '@/lib/firebase';
 
 type ReportType = {
   sessionId: string;
@@ -347,7 +697,7 @@ export type SessionParams = {
   id: number;
   note: string;
   sessionId: string;
-  selectedDoctor?: AiDoctorAgent;
+  selectedDoctor?: any;
   report?: ReportType;
   createdOn: string;
   status: string;
@@ -360,97 +710,66 @@ type Message = {
 
 export default function MedicalVoice() {
   const { sessionId } = useParams();
-  const router = useRouter();
+  const vapiRef = useRef<any>(null);
 
   const [sessionParams, setSessionParams] = useState<SessionParams | null>(null);
-  const [startCall, setStartCall] = useState(false);
-  const [vapiInstance, setVapiInstance] = useState<any>(null);
-  const [speaking, setSpeaking] = useState<string | null>(null);
-  const [transcript, setTranscript] = useState<string>('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [voiceAnimating, setVoiceAnimating] = useState(false);
-  const [listeningPaused, setListeningPaused] = useState<boolean>(false);
+  const [isActive, setIsActive] = useState(false);
+  const [speaking, setSpeaking] = useState<string | null>(null);
+  const [transcript, setTranscript] = useState<string>('');
 
-  // ✅ Fetch session securely
+  // ✅ Fetch session data
   useEffect(() => {
     if (sessionId) fetchSessionDetails();
   }, [sessionId]);
 
-const fetchSessionDetails = async () => {
-  try {
-    setLoading(true);
-
-    const user = getAuth().currentUser;
-    if (!user) {
-      toast.error('Please sign in again.');
-      return;
+  const fetchSessionDetails = async () => {
+    try {
+      setLoading(true);
+      const user = getAuth().currentUser;
+      if (!user) {
+        toast.error('Please sign in again.');
+        return;
+      }
+      const token = await user.getIdToken();
+      const result = await axios.get(`/api/chat-session?sessionId=${sessionId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!result.data?.success) {
+        toast.error(result.data?.error || 'Failed to fetch session.');
+        return;
+      }
+      setSessionParams(result.data?.data);
+    } catch (err) {
+      console.error('❌ Fetch session failed:', err);
+      toast.error('Failed to fetch session.');
+    } finally {
+      setLoading(false);
     }
+  };
 
-    const token = await user.getIdToken();
-
-    const result = await axios.get(`/api/chat-session?sessionId=${sessionId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    // ✅ Handle all response cases
-    if (!result.data?.success) {
-      toast.error(result.data?.error || 'Failed to fetch session.');
-      return;
-    }
-
-    const sessionData = result.data?.data;
-
-    if (!sessionData) {
-      toast.error('No session data found.');
-      return;
-    }
-
-    // ✅ Set session details
-    setSessionParams(sessionData);
-  } catch (err: any) {
-    console.error('❌ Fetch session failed:', err);
-    toast.error('Failed to fetch session.');
-  } finally {
-    setLoading(false);
-  }
-};
-
-  const handleCallStart = () => setStartCall(true);
-  const handleCallEnd = () => setStartCall(false);
-
+  // ✅ Handle incoming messages
   const handleMessage = (message: any) => {
     if (message.type === 'transcript') {
       const { role, transcriptType, transcript } = message;
       if (transcriptType === 'partial') {
         setTranscript(transcript);
         setSpeaking(role);
-        setVoiceAnimating(true);
       } else if (transcriptType === 'final' && transcript?.trim()) {
         setMessages((prev) => [...prev, { role, text: transcript }]);
         setTranscript('');
         setSpeaking(null);
-        setVoiceAnimating(false);
-
-        if (role === 'assistant') {
-          setListeningPaused(true);
-          setTimeout(() => setListeningPaused(false), 1500);
-        }
       }
     }
   };
 
-  const StartCall = async () => {
-    if (!sessionParams) {
-      toast.error('Session data not ready.');
-      return;
-    }
-
-    setLoading(true);
+  // ✅ Start conversation
+  const startConversation = async () => {
+    if (isActive || !sessionParams) return;
 
     try {
+      setLoading(true);
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach((track) => track.stop());
     } catch {
@@ -460,27 +779,16 @@ const fetchSessionDetails = async () => {
     }
 
     const vapi = new Vapi(process.env.NEXT_PUBLIC_VAPI_ASSISTANT_API_KEY!);
-    setVapiInstance(vapi);
-
-    const voiceId =
-      sessionParams?.selectedDoctor?.doctorVoiceId ||
-      's3://default-voice'; // fallback voice
+    vapiRef.current = vapi;
 
     const VapiVoiceConfig = {
       name: 'AI Medical Assistant',
-      firstMessage:
-        'Hello, I’m your AI Medical Assistant. How can I help you today?',
-      transcriber: {
-        provider: 'assembly-ai',
-        language: 'en',
-      },
-      voice: {
-        provider: 'openai',
-        voiceId,
-      },
+      firstMessage: 'Hello, I’m your AI Medical Assistant. How can I help you today?',
+      transcriber: { provider: 'assembly-ai', language: 'en' },
+      voice: { provider: 'openai', voiceId: 'nova' },
       model: {
-        provider: 'groq',
-        model: 'llama3-8b-8192',
+        provider: 'openai',
+        model: 'gpt-4.1-mini',
         messages: [
           {
             role: 'system',
@@ -492,44 +800,34 @@ const fetchSessionDetails = async () => {
       },
     };
 
-    console.log('Starting Vapi with:', VapiVoiceConfig);
-
-    try {
-      // @ts-ignore
-      vapi.start(VapiVoiceConfig);
-    } catch (error: any) {
-      toast.error(`Vapi start failed: ${error.message}`);
-      setLoading(false);
-      return;
-    }
-
+    vapi.on('message', handleMessage);
     vapi.on('call-start', () => {
-      handleCallStart();
+      setIsActive(true);
       toast.success('Consultation started');
     });
-
     vapi.on('call-end', () => {
-      handleCallEnd();
+      setIsActive(false);
+      toast.success('Consultation ended');
     });
-
-    vapi.on('message', (msg) => handleMessage(msg));
-
     vapi.on('error', (error: any) => {
-      console.error('❗ Vapi Error:', error);
-      toast.error('Voice assistant error.');
+      console.error('❗ Vapi Error:', JSON.stringify(error, null, 2));
+      toast.error('Voice assistant error occurred.');
     });
-
+// @ts-ignore
+    await vapi.start(VapiVoiceConfig);
     setLoading(false);
   };
 
-  const endCall = async () => {
-    if (!vapiInstance) return;
-    vapiInstance.stop();
-    setStartCall(false);
-    setVapiInstance(null);
-    toast.success('Consultation ended.');
+  // ✅ Stop conversation
+  const stopConversation = async () => {
+    if (!vapiRef.current) return;
+    await vapiRef.current.stop();
+    setIsActive(false);
+    vapiRef.current = null;
+    toast.success('Consultation stopped.');
   };
 
+  // ✅ Export to PDF
   const exportTranscriptAsPDF = () => {
     const pdf = new jsPDF();
     pdf.setFontSize(14);
@@ -540,21 +838,19 @@ const fetchSessionDetails = async () => {
     pdf.save('consultation_transcript.pdf');
   };
 
-  if (loading) {
+  if (loading)
     return (
       <div className="flex justify-center items-center h-screen text-white">
         <Loader className="animate-spin mr-2" /> Loading session...
       </div>
     );
-  }
 
-  if (!sessionParams) {
+  if (!sessionParams)
     return (
       <div className="flex justify-center items-center h-screen text-gray-400">
         No session data found.
       </div>
     );
-  }
 
   const doctor = sessionParams?.selectedDoctor;
 
@@ -563,23 +859,13 @@ const fetchSessionDetails = async () => {
       className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-6 flex flex-col items-center"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.6 }}
     >
-      <motion.h2
-        className="text-3xl font-bold mb-8 text-center bg-gradient-to-br from-purple-100 to-blue-200 bg-clip-text text-transparent"
-        initial={{ y: -30, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        Voice Consultation Session
-      </motion.h2>
+      <h2 className="text-3xl font-bold mb-8 text-center bg-gradient-to-br from-purple-300 to-blue-300 bg-clip-text text-transparent">
+        🩺 Voice Consultation with {doctor?.name || 'Your AI Doctor'}
+      </h2>
 
-      <motion.div
-        className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-5xl"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
-      >
+      <div className="flex flex-col md:flex-row gap-10 w-full max-w-5xl">
+        {/* Doctor Info */}
         <motion.div
           className="bg-gray-800 rounded-2xl shadow-xl p-6 flex flex-col items-center"
           whileHover={{ scale: 1.02 }}
@@ -588,78 +874,70 @@ const fetchSessionDetails = async () => {
             <Image
               src={doctor.image}
               alt={doctor?.name || 'Doctor'}
-              width={90}
-              height={90}
+              width={100}
+              height={100}
               className="rounded-full border-4 border-blue-400 shadow-lg"
             />
           )}
-          <h3 className="text-xl font-semibold mt-4 text-center">
-            {doctor?.name || 'Unknown Doctor'}
-          </h3>
-          <p className="text-sm text-gray-400">
-            Specialty: {doctor?.specialty || 'N/A'}
-          </p>
-          <div className="flex items-center gap-3 mt-3">
-            <span className="text-gray-400 text-sm">
-              Created: {new Date(sessionParams?.createdOn).toLocaleDateString()}
-            </span>
-            <span className="flex items-center gap-1 text-sm">
-              <Circle
-                className={`w-3 h-3 ${
-                  startCall ? 'text-green-400' : 'text-red-400'
-                }`}
-              />
-              {startCall ? 'Online' : 'Offline'}
-            </span>
+          <h3 className="text-xl font-semibold mt-4 text-center">{doctor?.name}</h3>
+          <p className="text-sm text-gray-400">{doctor?.specialty}</p>
+          <div className="flex items-center gap-2 mt-2">
+            <Circle className={`w-3 h-3 ${isActive ? 'text-green-400' : 'text-red-400'}`} />
+            {isActive ? 'Online' : 'Offline'}
           </div>
         </motion.div>
 
-        <div className="bg-gray-800 rounded-2xl shadow-xl p-6">
-          <h4 className="text-lg font-semibold mb-3">Consultation Transcript</h4>
-          <div className="space-y-2 max-h-60 overflow-y-auto">
-            {messages.slice(-6).map((msg, idx) => (
-              <motion.p
-                key={idx}
-                className="text-gray-300 text-sm"
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: idx * 0.1 }}
-              >
-                <strong>{msg.role}:</strong> {msg.text}
-              </motion.p>
-            ))}
+        {/* Chat Bubbles */}
+        <motion.div className="bg-gray-800 rounded-2xl shadow-xl p-6 flex-1 flex flex-col">
+          <h4 className="text-lg font-semibold mb-4">Conversation</h4>
+          <div className="flex-1 overflow-y-auto space-y-3 max-h-[400px] p-2">
+            <AnimatePresence>
+              {messages.map((msg, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className={`p-3 rounded-xl text-sm w-fit max-w-[80%] ${
+                    msg.role === 'assistant'
+                      ? 'bg-blue-600 self-start'
+                      : 'bg-purple-500 self-end ml-auto'
+                  }`}
+                >
+                  {msg.text}
+                </motion.div>
+              ))}
+            </AnimatePresence>
+
             {transcript && (
-              <motion.p className="text-blue-400 font-medium">
-                {speaking}: {transcript}
-              </motion.p>
+              <div className="text-blue-300 italic">{speaking}: {transcript}</div>
             )}
           </div>
 
-          {voiceAnimating && (
-            <div className="w-8 h-8 rounded-full border-4 border-blue-400 animate-ping mx-auto my-4"></div>
+          {/* Pulsing Voice Indicator */}
+          {isActive && (
+            <div className="flex justify-center my-4">
+              <div className="w-6 h-6 bg-blue-400 rounded-full animate-ping"></div>
+            </div>
           )}
 
-          <div className="mt-6 flex flex-col gap-3">
-            {!startCall ? (
-              <Button onClick={StartCall} disabled={loading}>
-                {loading ? <Loader className="animate-spin" /> : <PhoneCall />} Start Consultation
+          {/* Buttons */}
+          <div className="flex gap-3 mt-4">
+            {!isActive ? (
+              <Button onClick={startConversation} disabled={loading}>
+                <PhoneCall className="mr-2" /> Start Consultation
               </Button>
             ) : (
-              <Button variant="destructive" onClick={endCall} disabled={loading}>
-                {loading ? <Loader className="animate-spin" /> : <PhoneOff />} End Consultation
+              <Button variant="destructive" onClick={stopConversation}>
+                <PhoneOff className="mr-2" /> End Consultation
               </Button>
             )}
-
-            <Button
-              variant="outline"
-              onClick={exportTranscriptAsPDF}
-              className="mt-2 text-gray-600"
-            >
+            <Button variant="outline" onClick={exportTranscriptAsPDF}>
               Export as PDF
             </Button>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
     </motion.div>
   );
 }
