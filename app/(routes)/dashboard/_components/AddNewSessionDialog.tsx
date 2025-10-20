@@ -1,178 +1,5 @@
-// 'use client';
-
-// import React, { useState, useRef } from 'react';
-// import {
-//   Dialog,
-//   DialogClose,
-//   DialogContent,
-//   DialogDescription,
-//   DialogFooter,
-//   DialogHeader,
-//   DialogTitle,
-//   DialogTrigger,
-// } from "@/components/ui/dialog";
-// import { Button } from '@/components/ui/button';
-// import { IconArrowRight } from '@tabler/icons-react';
-// import { Textarea } from '@/components/ui/textarea';
-// import axios from 'axios';
-// import { AiDoctorAgent } from './AiDoctorAgentCard';
-// import { RecommendedDoctorCard } from './RecommendedDoctorCard';
-// import { useRouter } from 'next/navigation';
-// import { motion, AnimatePresence } from 'framer-motion';
-
-// export default function AddNewSessionDialog() {
-//   const [note, setNote] = useState<string>("");
-//   const [loading, setLoading] = useState<boolean>(false);
-//   const [aiDoctors, setAiDoctors] = useState<AiDoctorAgent[]>();
-//   const [selectedDoctor, setSelectedDoctor] = useState<AiDoctorAgent>();
-//   const closeRef = useRef<HTMLButtonElement | null>(null);
-//   const router = useRouter();
-
-//   const handleNext = async () => {
-//     try {
-//       setLoading(true);
-//       const result = await axios.post('/api/suggested-ai-doctors', { notes: note });
-//       setAiDoctors(result.data);
-//     } catch (error) {
-//       console.error("Error fetching AI doctors:", error);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const handleStartConsultation = async () => {
-//     if (!selectedDoctor) {
-//       alert("Please select a doctor to start the consultation.");
-//       return;
-//     }
-
-//     try {
-//       setLoading(true);
-//       const response = await axios.post('/api/chat-session', {
-//         notes: note,
-//         selectedDoctor: selectedDoctor
-//       });
-
-//       const sessionId = response.data?.sessionId;
-//       if (!sessionId) {
-//         alert("Session ID not returned. Something went wrong.");
-//         return;
-//       }
-
-//       closeRef.current?.click();
-//       router.push(`/dashboard/medical-voice/${sessionId}`);
-//     } catch (error) {
-//       console.error("Error starting consultation:", error);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return (
-//     <Dialog>
-//       <DialogTrigger asChild>
-//         <Button className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:opacity-90 shadow-md">
-//           Start Consultation <IconArrowRight className="ml-2" />
-//         </Button>
-//       </DialogTrigger>
-
-//       <DialogContent className="bg-zinc-900 text-white border border-zinc-700 rounded-xl shadow-2xl max-w-2xl overflow-y-auto">
-//         <DialogHeader>
-//           <DialogTitle className="text-xl font-semibold tracking-wide">
-//             Add New Session
-//           </DialogTitle>
-//           <DialogDescription asChild>
-//             <div className="mt-4">
-//               {!aiDoctors ? (
-//                 <motion.div
-//                   initial={{ opacity: 0, y: 10 }}
-//                   animate={{ opacity: 1, y: 0 }}
-//                   transition={{ duration: 0.4 }}
-//                 >
-//                   <p className="text-sm text-zinc-400 mb-3">
-//                     Tell us about your symptoms to match you with a virtual doctor.
-//                   </p>
-//                   <Textarea
-//                     placeholder="Describe your symptoms..."
-//                     className="h-[160px] bg-zinc-800 text-white placeholder-zinc-400 border border-zinc-700 focus:ring-purple-600"
-//                     onChange={(e) => setNote(e.target.value)}
-//                   />
-//                 </motion.div>
-//               ) : (
-//                 <motion.div
-//                   initial={{ opacity: 0 }}
-//                   animate={{ opacity: 1 }}
-//                   className="max-h-[400px] overflow-y-auto pr-2 grid grid-cols-1 sm:grid-cols-2 gap-4"
-//                 >
-//                   <AnimatePresence>
-//                     {aiDoctors.map((doctor, index) => (
-//                       <motion.div
-//                         key={index}
-//                         layout
-//                         initial={{ opacity: 0, scale: 0.95 }}
-//                         animate={{ opacity: 1, scale: 1 }}
-//                         exit={{ opacity: 0 }}
-//                         transition={{ duration: 0.3 }}
-//                       >
-//                         <RecommendedDoctorCard
-//                           doctor={doctor}
-//                           setSelectedDoctor={setSelectedDoctor}
-//                           selectedDoctor={selectedDoctor}
-//                         />
-//                       </motion.div>
-//                     ))}
-//                   </AnimatePresence>
-//                 </motion.div>
-//               )}
-//             </div>
-//           </DialogDescription>
-//         </DialogHeader>
-
-//         <DialogFooter className="mt-6 flex justify-end space-x-3">
-//           <DialogClose asChild>
-//             <button ref={closeRef} className="hidden" />
-//           </DialogClose>
-
-//           <DialogClose asChild>
-//             <Button variant="ghost" className="border border-zinc-700 text-zinc-300 hover:text-white">
-//               Cancel
-//             </Button>
-//           </DialogClose>
-
-//           {!aiDoctors ? (
-//             <Button
-//               onClick={handleNext}
-//               disabled={!note || loading}
-//               className="bg-purple-600 hover:bg-purple-700 text-white"
-//             >
-//               {loading ? 'Processing...' : <>Next <IconArrowRight className="ml-2" /></>}
-//             </Button>
-//           ) : (
-//             <Button
-//               onClick={handleStartConsultation}
-//               disabled={loading}
-//               className="bg-green-600 hover:bg-green-700 text-white"
-//             >
-//               {loading ? 'Processing...' : <>Start Consultation <IconArrowRight className="ml-2" /></>}
-//             </Button>
-//           )}
-//         </DialogFooter>
-//       </DialogContent>
-//     </Dialog>
-//   );
-// }
 'use client';
-import React, { useState, useRef } from 'react';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { IconArrowRight } from '@tabler/icons-react';
 import { Textarea } from '@/components/ui/textarea';
@@ -183,15 +10,14 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { auth } from "@/lib/firebase";
 
-export default function AddNewSessionDialog() {
+export default function AddNewSession() {
   const [note, setNote] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [aiDoctors, setAiDoctors] = useState<AiDoctorAgent[]>([]);
   const [selectedDoctor, setSelectedDoctor] = useState<AiDoctorAgent>();
-  const closeRef = useRef<HTMLButtonElement | null>(null);
   const router = useRouter();
 
-  // Step 1: Get AI doctor suggestions
+  // Fetch AI doctor suggestions
   const handleNext = async () => {
     if (!note.trim()) return;
 
@@ -210,12 +36,7 @@ export default function AddNewSessionDialog() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      if (result.data.success) {
-        setAiDoctors(result.data.data);
-      } else {
-        console.error('AI doctors API error:', result.data.error);
-        setAiDoctors([]);
-      }
+      setAiDoctors(result.data.success ? result.data.data : []);
     } catch (error) {
       console.error("Error fetching AI doctors:", error);
       setAiDoctors([]);
@@ -224,7 +45,7 @@ export default function AddNewSessionDialog() {
     }
   };
 
-  // Step 2: Start the consultation (create session)
+  // Start consultation with selected doctor
   const handleStartConsultation = async () => {
     if (!selectedDoctor) {
       alert("Please select a doctor to start the consultation.");
@@ -242,7 +63,7 @@ export default function AddNewSessionDialog() {
 
       const response = await axios.post(
         '/api/chat-session',
-        { notes: note, selectedDoctor }, // must match API body
+        { notes: note, selectedDoctor },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -252,8 +73,6 @@ export default function AddNewSessionDialog() {
         return;
       }
 
-      // Close dialog and navigate
-      closeRef.current?.click();
       router.push(`/dashboard/medical-voice/${sessionId}`);
     } catch (error: any) {
       console.error("Error starting consultation:", error);
@@ -264,95 +83,79 @@ export default function AddNewSessionDialog() {
   };
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:opacity-90 shadow-md">
-          Start Consultation <IconArrowRight className="ml-2" />
-        </Button>
-      </DialogTrigger>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      className="max-w-4xl w-full mx-auto mt-10 p-6 bg-gray-900/80 border border-cyan-600 rounded-3xl shadow-2xl backdrop-blur-md"
+    >
+      <h2 className="text-3xl font-bold text-cyan-400 mb-4">
+        Start New Consultation
+      </h2>
 
-      <DialogContent className="bg-zinc-900 text-white border border-zinc-700 rounded-xl shadow-2xl max-w-2xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-semibold tracking-wide">
-            Add New Session
-          </DialogTitle>
-          <DialogDescription asChild>
-            <div className="mt-4">
-              {aiDoctors.length === 0 ? (
+      {/* Step 1: Symptom Input */}
+      {aiDoctors.length === 0 ? (
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex flex-col gap-4"
+        >
+          <p className="text-cyan-200">
+            Describe your symptoms so we can match you with a virtual doctor.
+          </p>
+          <Textarea
+            placeholder="Type your symptoms here..."
+            className="h-[160px] bg-gray-800/70 text-white placeholder-cyan-300 border border-cyan-600 focus:ring-2 focus:ring-cyan-400 focus:border-transparent rounded-lg shadow-sm"
+            onChange={(e) => setNote(e.target.value)}
+          />
+          <Button
+            onClick={handleNext}
+            disabled={!note || loading}
+            className="w-fit bg-gradient-to-r from-cyan-400 to-purple-700 text-white font-semibold shadow-lg hover:scale-105 transform transition duration-300"
+          >
+            {loading ? 'Processing...' : <>Next <IconArrowRight className="ml-2" /></>}
+          </Button>
+        </motion.div>
+      ) : (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          {/* Step 2: Doctor Selection */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <AnimatePresence>
+              {aiDoctors.map((doctor, index) => (
                 <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4 }}
+                  key={index}
+                  layout
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.3 }}
+                  className="w-full max-w-[220px] mx-auto hover:scale-105 hover:shadow-[0_0_15px_rgba(0,255,255,0.6)] transition-transform duration-300"
                 >
-                  <p className="text-sm text-zinc-400 mb-3">
-                    Tell us about your symptoms to match you with a virtual doctor.
-                  </p>
-                  <Textarea
-                    placeholder="Describe your symptoms..."
-                    className="h-[160px] bg-zinc-800 text-white placeholder-zinc-400 border border-zinc-700 focus:ring-purple-600"
-                    onChange={(e) => setNote(e.target.value)}
+                  <RecommendedDoctorCard
+                    doctor={doctor}
+                    setSelectedDoctor={setSelectedDoctor}
+                    selectedDoctor={selectedDoctor}
                   />
                 </motion.div>
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="max-h-[400px] overflow-y-auto pr-2 grid grid-cols-1 sm:grid-cols-2 gap-4"
-                >
-                  <AnimatePresence>
-                    {aiDoctors.map((doctor, index) => (
-                      <motion.div
-                        key={index}
-                        layout
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <RecommendedDoctorCard
-                          doctor={doctor}
-                          setSelectedDoctor={setSelectedDoctor}
-                          selectedDoctor={selectedDoctor}
-                        />
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </motion.div>
-              )}
+              ))}
+            </AnimatePresence>
+          </div>
+
+          {/* Start Consultation Button */}
+          {selectedDoctor && (
+            <div className="mt-4 flex justify-center sm:justify-end">
+              <Button
+                onClick={handleStartConsultation}
+                disabled={loading}
+                className="bg-gradient-to-r from-purple-600 to-cyan-400 text-white font-semibold shadow-lg hover:scale-105 transform transition duration-300"
+              >
+                {loading ? 'Processing...' : <>Start Consultation <IconArrowRight className="ml-2" /></>}
+              </Button>
             </div>
-          </DialogDescription>
-        </DialogHeader>
-
-        <DialogFooter className="mt-6 flex justify-end space-x-3">
-          <DialogClose asChild>
-            <button ref={closeRef} className="hidden" />
-          </DialogClose>
-
-          <DialogClose asChild>
-            <Button variant="ghost" className="border border-zinc-700 text-zinc-300 hover:text-white">
-              Cancel
-            </Button>
-          </DialogClose>
-
-          {aiDoctors.length === 0 ? (
-            <Button
-              onClick={handleNext}
-              disabled={!note || loading}
-              className="bg-purple-600 hover:bg-purple-700 text-white"
-            >
-              {loading ? 'Processing...' : <>Next <IconArrowRight className="ml-2" /></>}
-            </Button>
-          ) : (
-            <Button
-              onClick={handleStartConsultation}
-              disabled={loading}
-              className="bg-green-600 hover:bg-green-700 text-white"
-            >
-              {loading ? 'Processing...' : <>Start Consultation <IconArrowRight className="ml-2" /></>}
-            </Button>
           )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </motion.div>
+      )}
+    </motion.div>
   );
 }

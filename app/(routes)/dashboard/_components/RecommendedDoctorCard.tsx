@@ -1,46 +1,51 @@
-"use client";
-import { cn } from "@/lib/utils";
-import { AiDoctorAgent } from "./AiDoctorAgentCard";
+'use client';
+import { AiDoctorAgent } from './AiDoctorAgentCard';
+import { motion } from 'framer-motion';
 
-type props = {
+type Props = {
   doctor: AiDoctorAgent;
   setSelectedDoctor: (doctor: AiDoctorAgent) => void;
   selectedDoctor?: AiDoctorAgent;
 };
 
-export function RecommendedDoctorCard({ doctor, setSelectedDoctor, selectedDoctor }: props) {
+export function RecommendedDoctorCard({ doctor, setSelectedDoctor, selectedDoctor }: Props) {
+  const isSelected = selectedDoctor === doctor;
+
   return (
-    <div
-      className={`max-w-xs w-full group/card ${selectedDoctor === doctor ? 'bg-violet-500 rounded-md' : ''}`}
+    <motion.div
       onClick={() => setSelectedDoctor(doctor)}
+      whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(0,255,255,0.6)' }}
+      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+      className={`cursor-pointer p-2 rounded-xl transition-all duration-300 w-full max-w-[200px] sm:max-w-[220px] 
+        ${isSelected
+          ? 'border-2 border-cyan-400 bg-gradient-to-br from-cyan-800 to-purple-900 shadow-lg'
+          : 'bg-gray-900/70 hover:bg-gray-900/90'} 
+      `}
     >
-      <div
-        className="cursor-pointer overflow-hidden relative card h-80 rounded-md shadow-xl max-w-sm mx-auto backgroundImage flex flex-col justify-between p-1 bg-cover bg-center bg-gray-100"
-        style={{
-          backgroundImage: `url(${doctor.image})`,
-          opacity: 0.66
-        }}
-      >
-        <div className="absolute w-full h-full top-0 left-0 bg-black/30 z-0"></div>
-        <div className="flex flex-row items-center space-x-3 z-10">
+      <div className="flex flex-col items-center justify-center p-4 space-y-3">
+        {/* Doctor Avatar */}
+        <div className={`relative w-16 h-16 rounded-full overflow-hidden border-2 border-cyan-400 shadow-md
+            ${isSelected ? 'ring-2 ring-cyan-400 ring-offset-2' : ''}`}>
           <img
-            height="100"
-            width="100"
-            alt={doctor.name}
             src={doctor.image}
-            className="h-10 w-10 rounded-full border-2 object-cover bg-gray-400 shadow-sm"
+            alt={doctor.name}
+            className="w-full h-full object-cover"
           />
-          <div className="flex flex-col">
-            <p className="text-[10px] text-purple-900 border bg-gray-200 rounded-md p-0.5 text-center">
-              {doctor.specialty}
-            </p>
-          </div>
+          {isSelected && (
+            <div className="absolute inset-0 bg-cyan-400/20 rounded-full animate-pulse"></div>
+          )}
         </div>
-        <div className="text content bg-black/40 p-2 rounded-md z-10">
-          <h1 className="font-semibold text-md md:text-xl text-gray-50">{doctor.name}</h1>
-          <p className="font-normal text-sm line-clamp-2 text-gray-50">{doctor.description}</p>
-        </div>
+
+        {/* Doctor Name */}
+        <h3 className="text-white text-md font-semibold text-center tracking-wide truncate">
+          {doctor.name}
+        </h3>
+
+        {/* Doctor Specialty */}
+        <span className="text-cyan-400 text-xs font-medium px-2 py-0.5 rounded-full bg-purple-900/40 truncate text-center">
+          {doctor.specialty}
+        </span>
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -52,11 +52,19 @@ import { onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import axios from "axios";
 
+
+interface PreferencesType {
+  darkMode: boolean;
+  emailNotifications: boolean;
+  autoSave: boolean;
+}
+
 // Define the type for your context
 interface UsersDetail {
   name: string;
   email: string;
   photoURL?: string | null;
+  preferences?: PreferencesType;
 }
 
 interface UserDetailContextType {

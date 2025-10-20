@@ -49,22 +49,27 @@ export default function SignIn() {
 
   return (
     <motion.div
-      className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-700 via-indigo-700 to-blue-700 p-4"
+      className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#020617] via-[#050d25] to-[#0a0f2c] p-6 relative overflow-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 1 }}
     >
+      {/* Glowing Background Elements */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(0,255,255,0.05),transparent)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(99,102,241,0.07),transparent)]" />
+
+      {/* Card */}
       <motion.div
-        className="w-full max-w-md p-8 rounded-3xl bg-white/20 backdrop-blur-lg shadow-2xl border border-white/30"
-        initial={{ scale: 0.8, opacity: 0 }}
+        className="w-full max-w-md p-8 rounded-3xl bg-white/10 backdrop-blur-2xl border border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.4)] relative z-10"
+        initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.6 }}
       >
-        <h2 className="text-3xl font-bold mb-6 text-center text-white drop-shadow-lg">
-          Welcome Back!
+        <h2 className="text-3xl font-bold mb-4 text-center text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-500">
+          Welcome Back
         </h2>
-        <p className="text-center text-white/80 mb-6">
-          Sign in to your account to continue your journey with us.
+        <p className="text-center text-gray-400 mb-6">
+          Sign in to continue your AI-powered experience.
         </p>
 
         {error && (
@@ -77,51 +82,54 @@ export default function SignIn() {
             name="email"
             placeholder="Email"
             onChange={handleChange}
-            className="w-full px-4 py-3 rounded-xl bg-white/30 placeholder-white/70 text-white focus:outline-none focus:ring-2 focus:ring-purple-400 backdrop-blur-sm"
+            className="w-full px-4 py-3 rounded-xl bg-[#10163d]/60 border border-white/10 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/60 transition-all"
           />
           <input
             type="password"
             name="password"
             placeholder="Password"
             onChange={handleChange}
-            className="w-full px-4 py-3 rounded-xl bg-white/30 placeholder-white/70 text-white focus:outline-none focus:ring-2 focus:ring-purple-400 backdrop-blur-sm"
+            className="w-full px-4 py-3 rounded-xl bg-[#10163d]/60 border border-white/10 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/60 transition-all"
           />
 
           <button
             type="submit"
-            className="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold transition-all duration-300 shadow-lg cursor-pointer"
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-indigo-700 hover:to-blue-600 text-white font-semibold transition-all duration-300 shadow-lg shadow-blue-500/20"
           >
             Sign In
           </button>
         </form>
 
         <div className="mt-6 text-center">
-          <p className="text-white/80 mb-4">Or sign up with</p>
+          <p className="text-gray-400 mb-4">Or sign in with</p>
           <div className="flex flex-col sm:flex-row sm:gap-4 gap-3 justify-center">
             <button
               onClick={() => handleSocialLogin(googleProvider)}
-              className="flex items-center justify-center gap-2 px-4 py-2 bg-white/30 text-white rounded-xl hover:bg-white/40 transition-all duration-300 shadow cursor-pointer w-full sm:w-auto"
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-gray-200 rounded-xl transition-all duration-300 shadow-sm border border-white/10 backdrop-blur-md"
             >
               <FcGoogle size={20} /> Google
             </button>
             <button
               onClick={() => handleSocialLogin(facebookProvider)}
-              className="flex items-center justify-center gap-2 px-4 py-2 bg-white/30 text-white rounded-xl hover:bg-white/40 transition-all duration-300 shadow cursor-pointer w-full sm:w-auto"
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-gray-200 rounded-xl transition-all duration-300 shadow-sm border border-white/10 backdrop-blur-md"
             >
               <FaFacebook size={20} /> Facebook
             </button>
             <button
               onClick={() => handleSocialLogin(githubProvider)}
-              className="flex items-center justify-center gap-2 px-4 py-2 bg-white/30 text-white rounded-xl hover:bg-white/40 transition-all duration-300 shadow cursor-pointer w-full sm:w-auto"
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-gray-200 rounded-xl transition-all duration-300 shadow-sm border border-white/10 backdrop-blur-md"
             >
               <FaGithub size={20} /> GitHub
             </button>
           </div>
         </div>
 
-        <p className="text-sm mt-6 text-center text-white/80">
+        <p className="text-sm mt-6 text-center text-gray-400">
           Don’t have an account?{" "}
-          <a href="/sign-up" className="text-purple-300 hover:underline cursor-pointer">
+          <a
+            href="/sign-up"
+            className="text-cyan-400 hover:text-indigo-400 transition-colors"
+          >
             Sign Up
           </a>
         </p>

@@ -4,6 +4,7 @@ import "./globals.css";
 import Provider from "./provider";
 import MotionWrapper from "./_components/MotionWrapper";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/context/ThemeProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,18 +26,16 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`
-          ${geistSans.variable} ${geistMono.variable} antialiased 
-          bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 
-          text-white min-h-screen
-        `}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased transition-colors duration-500 bg-white text-gray-900 dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 dark:text-white min-h-screen`}
       >
-        <Provider>
-          <MotionWrapper>{children}</MotionWrapper>
-          <Toaster />
-        </Provider>
+        <ThemeProvider>
+          <Provider>
+            <MotionWrapper>{children}</MotionWrapper>
+            <Toaster />
+          </Provider>
+        </ThemeProvider>
       </body>
     </html>
   );
