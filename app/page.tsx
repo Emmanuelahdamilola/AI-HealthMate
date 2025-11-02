@@ -330,6 +330,11 @@ export default function Home() {
           animation: float 4s ease-in-out infinite;
         }
       `}</style>
+
+        {/* Chatbot */}
+      <div className="chatbot">
+        
+      </div>
     </div>
   );
 }

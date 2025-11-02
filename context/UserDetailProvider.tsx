@@ -2,7 +2,7 @@
 
 // import React, { createContext, useState, useEffect } from "react";
 // import { onAuthStateChanged, User } from "firebase/auth";
-// import { auth } from "@/lib/firebase";   // ✅ your Firebase client
+// import { auth } from "@/lib/firebase";   
 // import axios from "axios";
 
 // export const UserDetailContext = createContext<any>(undefined);
@@ -43,8 +43,6 @@
 // };
 
 
-
-
 "use client";
 
 import React, { createContext, useState, useEffect, ReactNode } from "react";
@@ -52,19 +50,11 @@ import { onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import axios from "axios";
 
-
-interface PreferencesType {
-  darkMode: boolean;
-  emailNotifications: boolean;
-  autoSave: boolean;
-}
-
 // Define the type for your context
 interface UsersDetail {
   name: string;
   email: string;
   photoURL?: string | null;
-  preferences?: PreferencesType;
 }
 
 interface UserDetailContextType {

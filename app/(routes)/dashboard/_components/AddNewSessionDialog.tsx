@@ -9,6 +9,7 @@ import { RecommendedDoctorCard } from './RecommendedDoctorCard';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { auth } from "@/lib/firebase";
+import { toast } from 'sonner';
 
 export default function AddNewSession() {
   const [note, setNote] = useState<string>("");
@@ -25,13 +26,13 @@ export default function AddNewSession() {
       setLoading(true);
       const user = auth.currentUser;
       if (!user) {
-        alert("You must be signed in to get AI doctor suggestions.");
+        toast("You must be signed in to get AI doctor suggestions.");
         return;
       }
       const token = await user.getIdToken(true);
 
       const result = await axios.post(
-        '/api/suggested-ai-doctors',
+        '/api/suggested-ai-doctors-enhanced',
         { notes: note },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -48,7 +49,7 @@ export default function AddNewSession() {
   // Start consultation with selected doctor
   const handleStartConsultation = async () => {
     if (!selectedDoctor) {
-      alert("Please select a doctor to start the consultation.");
+      toast("Please select a doctor to start the consultation.");
       return;
     }
 
@@ -56,32 +57,33 @@ export default function AddNewSession() {
       setLoading(true);
       const user = auth.currentUser;
       if (!user) {
-        alert("You must be signed in to start a consultation.");
+        toast("You must be signed in to start a consultation.");
         return;
       }
       const token = await user.getIdToken(true);
 
       const response = await axios.post(
-        '/api/chat-session',
+        '/api/voice-chat',
         { notes: note, selectedDoctor },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       const sessionId = response.data?.sessionId;
       if (!sessionId) {
-        alert("Session ID not returned. Something went wrong.");
+        toast("Session ID not returned. Something went wrong.");
         return;
       }
 
       router.push(`/dashboard/medical-voice/${sessionId}`);
     } catch (error: any) {
       console.error("Error starting consultation:", error);
-      alert("Failed to start consultation. Check console for details.");
+      toast("Failed to start consultation. Check console for details.");
     } finally {
       setLoading(false);
     }
   };
 
+  
   return (
     <motion.div
       initial={{ opacity: 0 }}

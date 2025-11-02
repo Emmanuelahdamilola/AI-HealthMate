@@ -37,6 +37,7 @@ export const sessionChatTable = pgTable("session_chat_table", {
   note: varchar({ length: 5000 }).notNull(),
   conversation: json(),
   selectedDoctor: json(),
+  language: varchar({ length: 50 }),
   report: json(),
   status: varchar({ length: 100 }).notNull(),
   userId: integer().notNull().references(() => usersTable.id), // 🔹 proper FK

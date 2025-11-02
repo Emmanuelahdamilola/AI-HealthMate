@@ -1,7 +1,6 @@
 // lib/firebase.ts
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
 import { getAuth, Auth, GoogleAuthProvider, FacebookAuthProvider, GithubAuthProvider } from "firebase/auth";
-import { getStorage, FirebaseStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
@@ -17,9 +16,6 @@ const app: FirebaseApp = !getApps().length ? initializeApp(firebaseConfig) : get
 
 // Auth
 export const auth: Auth = getAuth(app);
-
-// Storage ✅
-export const storage: FirebaseStorage = getStorage(app);
 
 // Social providers
 export const googleProvider = new GoogleAuthProvider();
