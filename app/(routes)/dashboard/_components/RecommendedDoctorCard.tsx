@@ -14,7 +14,7 @@ type Props = {
   doctor: AiDoctorAgent;
   setSelectedDoctor: (doctor: AiDoctorAgent) => void;
   selectedDoctor?: AiDoctorAgent;
-  // CRUCIAL CHANGE: Pass the N-ATLAS match reason data
+  //  Pass the N-ATLAS match reason data
   natlasMatchReason?: NatlasMatchReason | null; 
 };
 
@@ -51,7 +51,7 @@ export function RecommendedDoctorCard({ doctor, setSelectedDoctor, selectedDocto
                     : 'bg-gray-900/70 border-gray-700/50 hover:bg-gray-800/90'} 
             `}
         >
-            {/* 1. SELECTION CHECK MARK */}
+            {/*SELECTION CHECK MARK */}
             {isSelected && (
                 <motion.div
                     initial={{ scale: 0 }}
@@ -89,7 +89,7 @@ export function RecommendedDoctorCard({ doctor, setSelectedDoctor, selectedDocto
             {/* --- N-ATLAS INTELLIGENCE BAR (NEW UI FOCUS) --- */}
             <div className="mt-4 pt-3 border-t border-gray-700/50 space-y-3">
                 
-                {/* A. Severity Match */}
+                {/*  Severity Match */}
                 <div className="flex justify-between items-center text-sm">
                     <span className="text-gray-400 flex items-center gap-1">
                         <Zap className="w-4 h-4 text-yellow-500" />
@@ -100,7 +100,7 @@ export function RecommendedDoctorCard({ doctor, setSelectedDoctor, selectedDocto
                     </span>
                 </div>
 
-                {/* B. Matched Symptoms Display */}
+                {/*  Matched Symptoms Display */}
                 <div className="text-sm">
                     <p className="text-gray-400 mb-1 font-semibold">Detected Symptoms:</p>
                     <div className="flex flex-wrap gap-1">
@@ -114,7 +114,7 @@ export function RecommendedDoctorCard({ doctor, setSelectedDoctor, selectedDocto
                     </div>
                 </div>
                 
-                {/* C. Quick Description Tooltip (Optional visual flair) */}
+                {/*  Quick Description Tooltip (Optional visual flair) */}
                 <div className="pt-2 text-xs text-gray-500 italic border-t border-gray-800/50">
                     {doctor.description}
                 </div>

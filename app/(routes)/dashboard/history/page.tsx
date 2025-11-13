@@ -4,7 +4,12 @@ import { useRouter } from 'next/navigation';
 import { useContext, useEffect, useState } from 'react';
 import axios from 'axios';
 import MedicalReport from '../_components/MedicalReport';
-import { SessionParams } from '../medical-voice/[sessionId]/page';
+// Local type for session params — adjust fields or replace with a shared import if available
+type SessionParams = {
+  sessionId: string;
+  createdAt?: string;
+  [key: string]: any;
+};
 import { UserDetailContext } from '@/context/UserDetailProvider';
 
 export default function HistoryPage() {

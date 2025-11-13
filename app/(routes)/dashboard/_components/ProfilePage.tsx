@@ -83,10 +83,10 @@ export default function ProfilePage() {
     }
   }, [displayName, newPassword, currentPhotoURL, setUserDetail, user]);
 
-  // Placeholder for demonstration purposes - would fetch from DB
+
   const consultationStats = {
-      lastConsult: userDetail?.lastConsult || new Date().toISOString(),
-      totalConsults: userDetail?.totalConsults || 14,
+      lastConsult: (userDetail as any)?.lastConsult ?? new Date().toISOString(),
+      totalConsults: (userDetail as any)?.totalConsults ?? 14,
   };
 
 

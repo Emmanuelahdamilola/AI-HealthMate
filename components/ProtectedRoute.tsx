@@ -1,29 +1,53 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { onAuthStateChanged, User } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { useContext, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { UserDetailContext } from '@/context/UserDetailProvider';
 
-export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+}
+
+export default function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const context = useContext(UserDetailContext);
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const pathname = usePathname();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      if (!firebaseUser) {
-        router.push("/sign-in");
-      } else {
-        setUser(firebaseUser);
-      }
-      setLoading(false);
-    });
+    if (!context) return;
 
-    return () => unsubscribe();
-  }, [router]);
+    const { user, loading } = context;
 
-  if (loading) return <p className="text-center mt-20">Loading...</p>;
 
-  return <>{children}</>;
+    if (loading) return;
+
+
+    if (!user && !loading) {
+      console.log('🚫 No user found, redirecting to sign-in');
+
+      sessionStorage.setItem('redirectAfterLogin', pathname);
+      
+      router.push('/sign-in');
+    }
+  }, [context, router, pathname]);
+
+
+  if (!context || context.loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-400 mb-4"></div>
+          <p className="text-white text-lg">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+
+  if (context.user) {
+    return <>{children}</>;
+  }
+
+
+  return null;
 }

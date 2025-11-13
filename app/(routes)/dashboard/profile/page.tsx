@@ -10,25 +10,50 @@ import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { storage } from '@/lib/firebase';
 
 export default function ProfilePage() {
-  const { user, userDetail, setUserDetail } = useContext(UserDetailContext)!;
+  const context = useContext(UserDetailContext);
+  
+  // Handle undefined context
+  if (!context) {
+    return <div className="text-white p-6">Loading...</div>;
+  }
 
-  const [displayName, setDisplayName] = useState(userDetail?.name || '');
-  const [photoURL, setPhotoURL] = useState(userDetail?.photoURL || '');
-  const [email, setEmail] = useState(userDetail?.email || '');
+  const { user, userDetail, setUserDetail, refreshUser } = context;
+
+  const [displayName, setDisplayName] = useState('');
+  const [photoURL, setPhotoURL] = useState('');
+  const [email, setEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   useEffect(() => {
-    setDisplayName(userDetail?.name || user?.displayName || '');
-    setPhotoURL(userDetail?.photoURL || user?.photoURL || '');
-    setEmail(userDetail?.email || user?.email || '');
+    if (userDetail) {
+      setDisplayName(userDetail.name || '');
+      setPhotoURL(userDetail.photoURL || '');
+      setEmail(userDetail.email || '');
+    } else if (user) {
+      setDisplayName(user.displayName || '');
+      setPhotoURL(user.photoURL || '');
+      setEmail(user.email || '');
+    }
   }, [userDetail, user]);
 
   // Handle photo upload
   const handlePhotoChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB');
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
 
     try {
       setLoading(true);
@@ -42,9 +67,10 @@ export default function ProfilePage() {
           setUploadProgress(progress);
         },
         error => {
-          console.error(error);
+          console.error('Upload error:', error);
           toast.error('Failed to upload image.');
           setLoading(false);
+          setUploadProgress(null);
         },
         async () => {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
@@ -54,10 +80,11 @@ export default function ProfilePage() {
           setLoading(false);
         }
       );
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      console.error('Upload error:', err);
       toast.error('Failed to upload photo.');
       setLoading(false);
+      setUploadProgress(null);
     }
   };
 
@@ -67,31 +94,67 @@ export default function ProfilePage() {
 
     try {
       const auth = getAuth();
-      if (!auth.currentUser) throw new Error('User not signed in');
+      if (!auth.currentUser) {
+        throw new Error('User not signed in');
+      }
 
       // Update Firebase Auth profile
       await updateProfile(auth.currentUser, { displayName, photoURL });
+      console.log(' Firebase profile updated');
 
       // Optional: update password
       if (newPassword) {
+        if (newPassword.length < 6) {
+          throw new Error('Password must be at least 6 characters');
+        }
         await updatePassword(auth.currentUser, newPassword);
         toast.success('Password updated successfully');
         setNewPassword('');
       }
 
       // Update your backend database
-      const token = await auth.currentUser.getIdToken();
+      const token = await auth.currentUser.getIdToken(true); 
+      
       const res = await axios.put(
         '/api/users',
         { name: displayName, photoURL },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { 
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 10000
+        }
       );
 
-      setUserDetail(res.data);
+      console.log('✅ Backend profile updated');
+
+      setUserDetail({
+        ...res.data,
+        name: res.data.name,
+        email: res.data.email,
+        photoURL: res.data.photoURL || null
+      });
+
+      // Refresh user context
+      if (refreshUser) {
+        await refreshUser();
+      }
+
       toast.success('Profile updated successfully');
+
     } catch (err: any) {
-      console.error(err);
-      toast.error(err.message || 'Failed to update profile');
+      console.error('❌ Profile update error:', err);
+      
+      if (err.response?.status === 401) {
+        toast.error('Session expired. Please sign in again.');
+      } else if (err.code === 'auth/weak-password') {
+        toast.error('Password must be at least 6 characters');
+      } else if (err.code === 'auth/requires-recent-login') {
+        toast.error('Please sign out and sign in again to change your password');
+      } else {
+        toast.error(err.message || 'Failed to update profile');
+      }
     } finally {
       setLoading(false);
     }
@@ -114,14 +177,33 @@ export default function ProfilePage() {
               src={photoURL || '/placeholder-user.png'}
               alt="Profile"
               className="w-36 h-36 rounded-full object-cover border-4 border-cyan-400 shadow-lg"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/placeholder-user.png';
+              }}
             />
-            <label className="absolute bottom-0 right-0 bg-cyan-500 hover:bg-cyan-400 text-white p-2 rounded-full cursor-pointer shadow-lg">
-              <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
+            <label className="absolute bottom-0 right-0 bg-cyan-500 hover:bg-cyan-400 text-white p-2 rounded-full cursor-pointer shadow-lg transition-colors">
+              <input 
+                type="file" 
+                accept="image/*" 
+                className="hidden" 
+                onChange={handlePhotoChange}
+                disabled={loading}
+              />
               ✎
             </label>
           </div>
-          {uploadProgress && (
-            <p className="text-sm text-gray-300">{`Uploading: ${Math.round(uploadProgress)}%`}</p>
+          {uploadProgress !== null && (
+            <div className="w-full">
+              <div className="bg-gray-700 rounded-full h-2 overflow-hidden">
+                <div 
+                  className="bg-cyan-500 h-full transition-all duration-300"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+              <p className="text-sm text-gray-300 text-center mt-1">
+                {`Uploading: ${Math.round(uploadProgress)}%`}
+              </p>
+            </div>
           )}
         </div>
 
@@ -133,7 +215,8 @@ export default function ProfilePage() {
               type="text"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              className="p-3 rounded-lg bg-gray-800 text-white border border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+              disabled={loading}
+              className="p-3 rounded-lg bg-gray-800 text-white border border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 disabled:opacity-50"
             />
           </div>
 
@@ -145,6 +228,7 @@ export default function ProfilePage() {
               readOnly
               className="p-3 rounded-lg bg-gray-800 text-gray-400 border border-cyan-500 cursor-not-allowed"
             />
+            <p className="text-xs text-gray-400 mt-1">Email cannot be changed</p>
           </div>
 
           <div className="flex flex-col">
@@ -154,13 +238,16 @@ export default function ProfilePage() {
               placeholder="Leave empty to keep current password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="p-3 rounded-lg bg-gray-800 text-white border border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+              disabled={loading}
+              minLength={6}
+              className="p-3 rounded-lg bg-gray-800 text-white border border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 disabled:opacity-50"
             />
+            <p className="text-xs text-gray-400 mt-1">Minimum 6 characters</p>
           </div>
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || uploadProgress !== null}
             className="mt-4 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-white py-3 px-6 rounded-2xl font-semibold shadow-lg transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Updating...' : 'Update Profile'}

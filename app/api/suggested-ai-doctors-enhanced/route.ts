@@ -1,138 +1,3 @@
-// // app/api/suggested-ai-doctors-enhanced/route.ts
-// // Enhanced version with N-ATLAS integration
-
-// import { openai } from "@/config/OpenAiModel";
-// import { AiDoctorList } from "@/shared/doctorList";
-// import { NextRequest, NextResponse } from "next/server";
-// import { rateLimiter } from "@/lib/rateLimiter";
-// import { analyzeForDoctorSuggestion } from "@/lib/natlas-service"; 
-
-// export async function POST(req: NextRequest) {
-//   if (!rateLimiter(req)) {
-//     return NextResponse.json({ success: false, error: 'Too many requests' }, { status: 429 });
-//   }
-
-//   try {
-//     const { notes, language } = await req.json();
-    
-//     if (!notes || typeof notes !== 'string' || notes.trim() === '') {
-//       return NextResponse.json({ success: false, error: 'Invalid notes' }, { status: 400 });
-//     }
-
-//     // Step 1: Determine language. Rely on user input; default to 'english'.
-//     // The backend (Render API) handles the universal search regardless of this tag.
-//     const determinedLanguage = language || 'english';
-//     console.log(`🌍 Language used: ${determinedLanguage} (User/Default)`);
-
-//     // Step 2: Analyze with N-ATLAS for cultural context and translation
-//     let natlasAnalysis;
-//     let enhancedNotes = notes;
-//     let culturalContext = '';
-//     let extractedSymptoms: string[] = [];
-//     let severity = 'moderate';
-
-//     try {
-//       // Pass the determined language to the backend for contextual fallback generation
-//       natlasAnalysis = await analyzeForDoctorSuggestion(notes, determinedLanguage);
-      
-//       if (natlasAnalysis.success) {
-//         // These fields are guaranteed to be populated now due to the Enhanced Fallback fix on the API
-//         enhancedNotes = natlasAnalysis.enhanced_notes;
-//         culturalContext = natlasAnalysis.cultural_insights.context;
-//         extractedSymptoms = natlasAnalysis.keywords;
-//         severity = natlasAnalysis.severity;
-        
-//         console.log(`✅ N-ATLAS Analysis: ${natlasAnalysis.match_type} (${natlasAnalysis.similarity_score}%)`);
-//         console.log(`   Keywords: ${extractedSymptoms.join(', ')}`);
-//       }
-//     } catch (natlasError) {
-//       console.warn('⚠️ N-ATLAS unavailable, proceeding without enhancement:', natlasError);
-//       // Continue without N-ATLAS if it fails
-//     }
-
-//     // Step 3: Build enhanced prompt for AI doctor suggestion
-//     const systemPrompt = `You are a helpful medical assistant specializing in Nigerian healthcare. 
-// Based on the patient's symptoms, suggest which doctors from the following list are most relevant.
-
-// ${natlasAnalysis ? `
-// CULTURAL CONTEXT: ${culturalContext}
-// DETECTED SYMPTOMS: ${extractedSymptoms.join(', ')}
-// SEVERITY: ${severity}
-// ` : ''}
-
-// Available doctors:
-// ${JSON.stringify(AiDoctorList)}
-
-// IMPORTANT: Only suggest doctors from this list. Prioritize specialties that match the detected symptoms and severity.`;
-
-//     const userPrompt = natlasAnalysis 
-//       ? `Original patient input: "${notes}"
-         
-//          Translation/Analysis: ${natlasAnalysis.translation}
-         
-//          Enhanced medical context: ${enhancedNotes}
-         
-//          Return ONLY a JSON array of the most relevant doctors from the provided list. Select 2-4 doctors based on symptom match and severity. Do not include explanations or markdown.`
-//       : `User symptoms: ${notes}\n\nReturn ONLY a JSON array of relevant doctors from the provided list. Do not include explanations or markdown.`;
-
-//     // Step 4: Get AI suggestions with enhanced context
-//     const completion = await openai.chat.completions.create({
-//       model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-//       messages: [
-//         { role: 'system', content: systemPrompt },
-//         { role: 'user', content: userPrompt },
-//       ],
-//     });
-
-//     const aiRaw = completion.choices[0].message?.content?.trim() || '';
-//     const jsonStart = aiRaw.indexOf('[');
-//     const jsonEnd = aiRaw.lastIndexOf(']') + 1;
-    
-//     if (jsonStart === -1 || jsonEnd === -1) {
-//       throw new Error('No valid JSON array found');
-//     }
-
-//     // Use a try-catch for JSON.parse just in case the slicing is imperfect
-//     let aiParsed: any[] = [];
-//     try {
-//         aiParsed = JSON.parse(aiRaw.slice(jsonStart, jsonEnd));
-//     } catch (e) {
-//         console.error("❌ Failed to parse final AI JSON output:", e, aiRaw);
-//         // Fallback to empty array if parsing fails
-//     }
-    
-//     const matchedDoctors = AiDoctorList.filter(doc => 
-//       aiParsed.some((aiDoc: any) => aiDoc.name === doc.name)
-//     );
-
-//     // Step 5: Return enhanced response
-//     return NextResponse.json({ 
-//       success: true, 
-//       data: matchedDoctors,
-//       natlasEnhancement: natlasAnalysis ? {
-//         language: determinedLanguage,
-//         translation: natlasAnalysis.translation,
-//         culturalContext: culturalContext,
-//         severity: severity,
-//         detectedSymptoms: extractedSymptoms,
-//         recommendedSpecialties: natlasAnalysis.recommended_specialties,
-//         matchType: natlasAnalysis.match_type,
-//         cached: natlasAnalysis.cached
-//       } : null
-//     });
-
-//   } catch (error: any) {
-//     console.error('❌ suggested-ai-doctors-enhanced POST error:', error.message);
-//     return NextResponse.json({ 
-//       success: false, 
-//       error: error.message || 'Internal Server Error' 
-//     }, { status: 500 });
-//   }
-// }
-
-
-// app/api/suggested-ai-doctors-enhanced/route.ts
-// Enhanced version with N-ATLAS integration - FIXED
 
 import { openai } from "@/config/OpenAiModel";
 import { AiDoctorList } from "@/shared/doctorList";
@@ -152,94 +17,149 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Invalid notes' }, { status: 400 });
     }
 
-    // Step 1: Determine language. Rely on user input; default to 'english'.
     const determinedLanguage = language || 'english';
-    console.log(`🌍 Language used: ${determinedLanguage} (User/Default)`);
+    console.log(`🌍 Language used: ${determinedLanguage}`);
 
-    // Step 2: Analyze with N-ATLAS for cultural context and translation
+    // Parallel execution with timeout protection
     let natlasAnalysis;
     let enhancedNotes = notes;
     let culturalContext = '';
     let extractedSymptoms: string[] = [];
     let severity = 'moderate';
 
+    // Try N-ATLAS with 10s timeout
     try {
-      natlasAnalysis = await analyzeForDoctorSuggestion(notes, determinedLanguage);
+      console.log(' Starting N-ATLAS analysis with 10s timeout...');
       
-      if (natlasAnalysis.success) {
-        // ✅ FIXED: Using correct property names from NatlasAnalysisResponse
+      const natlasPromise = analyzeForDoctorSuggestion(notes, determinedLanguage);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('N-ATLAS timeout')), 10000)
+      );
+
+      natlasAnalysis = await Promise.race([natlasPromise, timeoutPromise]) as any;
+      
+      if (natlasAnalysis?.success) {
         enhancedNotes = natlasAnalysis.enhanced_notes || notes;
-        culturalContext = natlasAnalysis.cultural_context || '';  // Fixed from cultural_insights.context
-        extractedSymptoms = natlasAnalysis.medical_keywords || [];  // Fixed from keywords
+        culturalContext = natlasAnalysis.cultural_context || '';
+        extractedSymptoms = natlasAnalysis.medical_keywords || [];
         severity = natlasAnalysis.severity || 'moderate';
         
-        console.log(`✅ N-ATLAS Analysis: ${natlasAnalysis.match_type} (${natlasAnalysis.similarity_score}%)`);
-        console.log(`   Keywords: ${extractedSymptoms.join(', ')}`);
+        console.log(`✅ N-ATLAS completed: ${natlasAnalysis.match_type} (${natlasAnalysis.similarity_score}%)`);
       }
-    } catch (natlasError) {
-      console.warn('⚠️ N-ATLAS unavailable, proceeding without enhancement:', natlasError);
-      // Continue without N-ATLAS if it fails
+    } catch (natlasError: any) {
+      console.warn('⚠️ N-ATLAS failed/timeout, proceeding without enhancement:', natlasError.message);
+      
     }
 
-    // Step 3: Build enhanced prompt for AI doctor suggestion
-    const systemPrompt = `You are a helpful medical assistant specializing in Nigerian healthcare. 
-Based on the patient's symptoms, suggest which doctors from the following list are most relevant.
+    // Simplified and faster AI prompt
+    const systemPrompt = `You are a medical assistant. Based on symptoms, suggest 2-3 relevant doctors from this list:
+${JSON.stringify(AiDoctorList.map(d => ({ name: d.name, specialty: d.specialty })))}
 
-${natlasAnalysis ? `
-CULTURAL CONTEXT: ${culturalContext}
-DETECTED SYMPTOMS: ${extractedSymptoms.join(', ')}
-SEVERITY: ${severity}
-` : ''}
+${extractedSymptoms.length > 0 ? `
+Detected symptoms: ${extractedSymptoms.join(', ')}
+Severity: ${severity}` : ''}
 
-Available doctors:
-${JSON.stringify(AiDoctorList)}
+Return ONLY a JSON array of doctor names, no explanations.`;
 
-IMPORTANT: Only suggest doctors from this list. Prioritize specialties that match the detected symptoms and severity.`;
+    const userPrompt = `Patient symptoms: ${enhancedNotes}
 
-    const userPrompt = natlasAnalysis 
-      ? `Original patient input: "${notes}"
-         
-         Translation/Analysis: ${natlasAnalysis.translation}
-         
-         Enhanced medical context: ${enhancedNotes}
-         
-         Return ONLY a JSON array of the most relevant doctors from the provided list. Select 2-4 doctors based on symptom match and severity. Do not include explanations or markdown.`
-      : `User symptoms: ${notes}\n\nReturn ONLY a JSON array of relevant doctors from the provided list. Do not include explanations or markdown.`;
+Return JSON array of 2-3 most relevant doctor names from the list.`;
 
-    // Step 4: Get AI suggestions with enhanced context
-    const completion = await openai.chat.completions.create({
-      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-    });
+    console.log(' Calling OpenAI...');
+    
+    //  Faster OpenAI call with streaming disabled
+    const completion = await Promise.race([
+      openai.chat.completions.create({
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.3, 
+        max_tokens: 200, 
+      }),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('OpenAI timeout')), 15000)
+      )
+    ]) as any;
+
+    console.log(' OpenAI response received');
 
     const aiRaw = completion.choices[0].message?.content?.trim() || '';
-    const jsonStart = aiRaw.indexOf('[');
-    const jsonEnd = aiRaw.lastIndexOf(']') + 1;
+    console.log('AI Raw Response:', aiRaw);
+
+    //  Better JSON extraction
+    let aiParsed: any[] = [];
     
-    if (jsonStart === -1 || jsonEnd === -1) {
-      throw new Error('No valid JSON array found');
+    try {
+      // Try direct parse first
+      aiParsed = JSON.parse(aiRaw);
+    } catch {
+      // Extract JSON array from text
+      const jsonMatch = aiRaw.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        try {
+          aiParsed = JSON.parse(jsonMatch[0]);
+        } catch (e) {
+          console.error("❌ JSON parse failed:", e);
+        }
+      }
     }
 
-    // Parse AI response with error handling
-    let aiParsed: any[] = [];
-    try {
-      aiParsed = JSON.parse(aiRaw.slice(jsonStart, jsonEnd));
-    } catch (e) {
-      console.error("❌ Failed to parse final AI JSON output:", e, aiRaw);
-      // Fallback to empty array if parsing fails
+    //  Fallback if AI fails
+    if (!Array.isArray(aiParsed) || aiParsed.length === 0) {
+      console.warn('⚠️ AI parsing failed, using fallback matching');
+      
+      // Fallback: Match by keywords
+      const keywords = extractedSymptoms.length > 0 
+        ? extractedSymptoms 
+        : notes.toLowerCase().split(' ').filter(w => w.length > 4);
+
+      const matched = AiDoctorList.filter(doc => {
+        const docText = `${doc.name} ${doc.specialty} ${doc.description}`.toLowerCase();
+        return keywords.some(keyword => docText.includes(keyword.toLowerCase()));
+      }).slice(0, 3);
+
+      // If still no match, return general practitioners
+      const finalDoctors = matched.length > 0 
+        ? matched 
+        : AiDoctorList.filter(d => 
+            d.specialty.toLowerCase().includes('general') || 
+            d.specialty.toLowerCase().includes('family')
+          ).slice(0, 2);
+
+      return NextResponse.json({ 
+        success: true, 
+        data: finalDoctors,
+        natlasEnhancement: natlasAnalysis ? {
+          language: determinedLanguage,
+          translation: natlasAnalysis.translation || '',
+          culturalContext: culturalContext,
+          severity: severity,
+          detectedSymptoms: extractedSymptoms,
+          recommendedSpecialties: natlasAnalysis.recommended_specialties || [],
+          matchType: natlasAnalysis.match_type || 'fallback',
+          similarityScore: natlasAnalysis.similarity_score || 0,
+          cached: natlasAnalysis.cached || false
+        } : null,
+        fallbackUsed: true
+      });
     }
     
+    // Match doctors from AI response
     const matchedDoctors = AiDoctorList.filter(doc => 
-      aiParsed.some((aiDoc: any) => aiDoc.name === doc.name)
+      aiParsed.some((aiDoc: any) => {
+        const aiName = typeof aiDoc === 'string' ? aiDoc : aiDoc.name;
+        return aiName && doc.name.toLowerCase().includes(aiName.toLowerCase());
+      })
     );
 
-    // Step 5: Return enhanced response
+    console.log(`✅ Matched ${matchedDoctors.length} doctors`);
+
+    // Return success response
     return NextResponse.json({ 
       success: true, 
-      data: matchedDoctors,
+      data: matchedDoctors.slice(0, 2), 
       natlasEnhancement: natlasAnalysis ? {
         language: determinedLanguage,
         translation: natlasAnalysis.translation || '',
@@ -250,11 +170,21 @@ IMPORTANT: Only suggest doctors from this list. Prioritize specialties that matc
         matchType: natlasAnalysis.match_type || 'unknown',
         similarityScore: natlasAnalysis.similarity_score || 0,
         cached: natlasAnalysis.cached || false
-      } : null
+      } : null,
+      fallbackUsed: false
     });
 
   } catch (error: any) {
     console.error('❌ suggested-ai-doctors-enhanced POST error:', error.message);
+    
+    // Return helpful error messages
+    if (error.message.includes('timeout')) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Analysis took too long. Please try again with simpler symptoms.' 
+      }, { status: 504 });
+    }
+    
     return NextResponse.json({ 
       success: false, 
       error: error.message || 'Internal Server Error' 

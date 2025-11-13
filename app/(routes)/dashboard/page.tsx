@@ -42,42 +42,75 @@ export default function Dashboard() {
     }
   };
 
+  // Proper stats fetching
   useEffect(() => {
     const fetchStats = async () => {
       try {
         const user = getAuth().currentUser;
-        if (!user) return;
+        if (!user) {
+          console.log('ℹ️ No user logged in');
+          return;
+        }
 
+        console.log('📊 Fetching user stats...');
+        
         const token = await user.getIdToken();
         const res = await axios.get("/api/user-stats", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
+        console.log('✅ Stats fetched:', res.data);
         setStats(res.data);
-      } catch (err) {
-        console.error("Failed to fetch stats:", err);
+        
+      } catch (err: any) {
+        console.error("❌ Failed to fetch stats:", err);
+        
+        // Handle errors gracefully without showing toasts for new users
+        if (err.response?.status === 404 || err.response?.status === 401) {
+          console.log('ℹ️ No stats available (new user or auth issue) - using defaults');
+          setStats({
+            totalConsultations: 0,
+            lastConsultation: null,
+            patientHistoryCount: 0,
+          });
+        } else {
+          console.error('Server error:', err.response?.status);
+          setStats({
+            totalConsultations: 0,
+            lastConsultation: null,
+            patientHistoryCount: 0,
+          });
+        }
       }
     };
 
-    if (context?.user) fetchStats();
+    if (context?.user) {
+      fetchStats();
+    }
   }, [context?.user]);
 
+  //  Handler for starting consultation from dashboard
+  const handleStartConsultation = () => {
+    setActiveMenu('sessions');
+  };
+
+  // Render content with proper props
   const renderContent = () => {
     switch (activeMenu) {
       case "dashboard":
-        return <DashboardPage stats={stats} />;
+        return <DashboardPage stats={stats} onStartConsultation={handleStartConsultation} />;
       case "sessions":
         return <AddNewSessionDialog />;
       case "doctors":
         return <DoctorsPage />;
       case "history":
-        return <UserHistory />;
+        return <UserHistory history={[]} />; {/* History is fetched inside component */}
       case "profile":
         return <ProfilePage />;
       case "settings":
         return <SettingsPage />;
       default:
-        return <DashboardPage stats={stats} />;
+        return <DashboardPage stats={stats} onStartConsultation={handleStartConsultation} />;
     }
   };
 
@@ -199,7 +232,6 @@ export default function Dashboard() {
             )}
           </div>
         </header>
-
 
         <main className="flex-1 overflow-y-auto p-6 space-y-6">{renderContent()}</main>
       </div>

@@ -4,9 +4,11 @@ import { Button } from '@/components/ui/button';
 import { IconArrowRight, IconLoader, IconLanguage } from '@tabler/icons-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import React, { useState } from 'react'; 
+import React, { useState, useContext } from 'react'; 
 import axios from 'axios';
 import { motion } from 'framer-motion';
+import { UserDetailContext } from '@/context/UserDetailProvider';
+import { toast } from 'sonner';
 
 export type AiDoctorAgent = {
   id: number,
@@ -26,26 +28,75 @@ type Props = {
 
 export default function AiDoctorAgentCard({ AiDoctorAgent, initialLanguage }: Props) {
   const router = useRouter();
+  const context = useContext(UserDetailContext);
   const [isStartingConsultation, setIsStartingConsultation] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState(initialLanguage); 
 
   const handleStartConsultation = async () => {
+    // ✅ FIX: Check authentication first
+    if (!context?.user) {
+      toast.error('Please sign in to start a consultation');
+      router.push('/sign-in');
+      return;
+    }
+
     setIsStartingConsultation(true);
+    
     try {
-      const res = await axios.post('/api/voice-chat', {
-        notes: `New consultation with Dr. ${AiDoctorAgent.name}`,
-        selectedDoctor: AiDoctorAgent,
-        note: `New consultation for ${AiDoctorAgent.specialty}`,
-        report: {}, 
-        status: 'pending',
-        createdOn: new Date().toISOString(),
-        language: selectedLanguage, 
+      console.log('🏥 Starting consultation with:', AiDoctorAgent.name);
+      
+      //  Get authentication token
+      const token = await context.user.getIdToken(true);
+      
+      //  Send correct payload structure matching your API
+      const payload = {
+        notes: `I want to consult with Dr. ${AiDoctorAgent.name} about ${AiDoctorAgent.specialty}`, // Changed from 'note' to 'notes'
+        selectedDoctor: {
+          id: AiDoctorAgent.id,
+          name: AiDoctorAgent.name,
+          specialty: AiDoctorAgent.specialty,
+          description: AiDoctorAgent.description,
+          image: AiDoctorAgent.image,
+          agentPrompt: AiDoctorAgent.agentPrompt,
+          doctorVoiceId: AiDoctorAgent.doctorVoiceId,
+        },
+        language: selectedLanguage,
+
+      };
+
+      console.log('📤 Sending payload:', payload);
+
+      const res = await axios.post('/api/voice-chat', payload, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        timeout: 30000, // 30 second timeout
       });
 
-      router.push(`/dashboard/consultation/${res.data.sessionId}`);
-    } catch (err) {
-      console.error('Failed to start consultation:', err);
-      alert('Unable to start consultation. Please try again.');
+      console.log('Consultation started:', res.data);
+
+      if (res.data.success && res.data.sessionId) {
+        toast.success(`Consultation started with ${AiDoctorAgent.name}!`);
+        router.push(`/dashboard/consultation/${res.data.sessionId}`);
+      } else {
+        throw new Error('Failed to get session ID');
+      }
+
+    } catch (err: any) {
+      console.error('❌ Failed to start consultation:', err);
+      
+      // Better error messages
+      if (err.response?.status === 401) {
+        toast.error('Session expired. Please sign in again.');
+        router.push('/sign-in');
+      } else if (err.response?.status === 400) {
+        toast.error(`Invalid request: ${err.response.data?.error || 'Please try again'}`);
+      } else if (err.code === 'ECONNABORTED') {
+        toast.error('Request timeout. Please check your connection.');
+      } else {
+        toast.error(err.response?.data?.error || 'Unable to start consultation. Please try again.');
+      }
     } finally {
       setIsStartingConsultation(false);
     }
@@ -79,7 +130,7 @@ export default function AiDoctorAgentCard({ AiDoctorAgent, initialLanguage }: Pr
              maskComposite: 'exclude',
              opacity: 0,
              transition: 'opacity 0.4s ease-out, inset 0.3s ease-out',
-             WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)', // For Safari
+             WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
            }}
            aria-hidden="true"
       />
@@ -90,9 +141,8 @@ export default function AiDoctorAgentCard({ AiDoctorAgent, initialLanguage }: Pr
           src={AiDoctorAgent.image}
           alt={AiDoctorAgent.name}
           fill
-          className="object-cover object-top opacity-70 group-hover:opacity-100 transition-opacity duration-300" // object-top if head is cut off
+          className="object-cover object-top opacity-70 group-hover:opacity-100 transition-opacity duration-300"
         />
-        {/* Subtle gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#111827]/80 to-transparent" />
       </div>
 
@@ -109,7 +159,7 @@ export default function AiDoctorAgentCard({ AiDoctorAgent, initialLanguage }: Pr
           {AiDoctorAgent.description}
         </p>
 
-        {/* New Feature: Specialty Keywords */}
+        {/* Specialty Keywords */}
         {AiDoctorAgent.specialtyKeywords && AiDoctorAgent.specialtyKeywords.length > 0 && (
           <div className="mt-2 text-xs text-gray-400">
             <p className="font-semibold text-cyan-400">Focus Areas:</p>
@@ -134,7 +184,7 @@ export default function AiDoctorAgentCard({ AiDoctorAgent, initialLanguage }: Pr
                 value={selectedLanguage}
                 onChange={(e) => setSelectedLanguage(e.target.value)}
                 className="bg-[#1e293b] text-white border border-gray-600 rounded-lg p-2 focus:ring-purple-500 focus:border-purple-500 text-sm"
-                disabled={isStartingConsultation} // Disable during API call
+                disabled={isStartingConsultation}
             >
                 <option value="english">🇬🇧 English</option>
                 <option value="yoruba">🇳🇬 Yoruba</option>
@@ -148,13 +198,17 @@ export default function AiDoctorAgentCard({ AiDoctorAgent, initialLanguage }: Pr
           <Button
             className="w-full bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-600 text-white 
                        px-6 py-3 rounded-xl text-base font-bold flex items-center gap-2 shadow-[0_0_15px_rgba(168,85,247,0.4)] 
-                       transition-all duration-300 transform hover:-translate-y-1"
+                       transition-all duration-300 transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleStartConsultation}
-            disabled={isStartingConsultation}
+            disabled={isStartingConsultation || !context?.user}
           >
             {isStartingConsultation ? (
               <>
                 <IconLoader className="w-5 h-5 animate-spin" /> Starting...
+              </>
+            ) : !context?.user ? (
+              <>
+                Sign In to Consult
               </>
             ) : (
               <>

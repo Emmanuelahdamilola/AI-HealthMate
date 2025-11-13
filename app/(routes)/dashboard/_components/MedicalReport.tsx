@@ -135,10 +135,6 @@ function MedicalReport({ history }: Props) {
     }
   }
   
-  // NOTE: Exporting the entire table with html2canvas is removed as it's unreliable.
-  // The 'Export to PDF' button is removed from the UI.
-  // If you need the button, change its onClick handler to alert the user to use the row download.
-
   return (
     <motion.div
       className="min-h-screen bg-gray-900 text-white p-6 flex flex-col items-center"
@@ -172,7 +168,6 @@ function MedicalReport({ history }: Props) {
             }}
             className="px-4 py-2 rounded-xl bg-gray-700 text-white border border-cyan-400/30 w-full md:w-1/2 focus:ring-purple-500 focus:border-purple-500 transition"
           />
-          {/* Export button removed due to unreliability, focus shifted to row download */}
         </div>
 
         <div className="overflow-x-auto rounded-xl border border-gray-700">

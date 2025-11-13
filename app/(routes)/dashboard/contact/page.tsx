@@ -44,7 +44,7 @@ export default function ContactPage() {
             animate={{ opacity: 1 }}
             className="text-center text-green-400 font-medium"
           >
-            ✅ Your message has been submitted!
+            Your message has been submitted!
           </motion.div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-5">

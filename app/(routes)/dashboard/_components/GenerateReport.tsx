@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, FileText, Download, Zap, CheckCircle, Activity, User, Clock, Shield } from "lucide-react";
 import { motion } from "framer-motion";
 
-// NOTE: The complexity of LLM parsing means array fields may sometimes be strings.
+//  The complexity of LLM parsing means array fields may sometimes be strings.
 // Ensure your backend handles this by always returning arrays.
 
 interface Message {
@@ -33,7 +33,7 @@ interface ReportType {
 interface Props {
   sessionId: string;
   messages: Message[];
-  doctorProfile: { name: string; specialty: string }; // Assuming you pass the doctor profile
+  doctorProfile: { name: string; specialty: string }; 
 }
 
 // --- Helper for Severity Display ---
@@ -78,9 +78,9 @@ export default function GenerateReport({ sessionId, messages, doctorProfile }: P
       if (!res.ok || !data.success) throw new Error(data.error || "Failed to generate report.");
 
       setReport(data.data);
-      toast.success("✅ Medical report generated successfully!");
+      toast.success(" Medical report generated successfully!");
     } catch (error: any) {
-      console.error("❌ Generate report error:", error.message);
+      console.error(" Generate report error:", error.message);
       toast.error("Error generating report: " + error.message);
     } finally {
       setIsGenerating(false);
@@ -92,7 +92,7 @@ export default function GenerateReport({ sessionId, messages, doctorProfile }: P
 
     // Set loading state for download visualization
     const downloadId = report.sessionId;
-    setIsGenerating(true); // Reuse loading state for download time
+    setIsGenerating(true); 
 
     const doc = new jsPDF();
     const margin = 20;
@@ -102,22 +102,22 @@ export default function GenerateReport({ sessionId, messages, doctorProfile }: P
     // --- Header ---
     doc.setFontSize(24);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor('#333333'); // Dark Gray/Black
+    doc.setTextColor('#333333'); 
     doc.text("N-ATLAS Consultation Report", margin, y);
     y += lineHeight * 2;
 
     // --- Meta Data ---
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor('#666666'); // Lighter Gray
+    doc.setTextColor('#666666'); 
     doc.text(`Agent: ${report.agent}`, margin, y); y += 5;
     doc.text(`Patient: ${report.user}`, margin, y); y += 5;
     doc.text(`Date: ${new Date(report.timestamp).toLocaleDateString()}`, margin, y); y += 15;
 
-    // --- Section I: Complaint & Severity ---
+    //  Complaint & Severity ---
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor('#4a4a4a'); // Medium Gray
+    doc.setTextColor('#4a4a4a'); 
     doc.text("I. Complaint & Assessment", margin, y);
     y += 8;
 
@@ -131,13 +131,13 @@ export default function GenerateReport({ sessionId, messages, doctorProfile }: P
     y += 8;
 
     doc.text(`Main Complaint:`, margin, y);
-    doc.setTextColor('#000000'); // Black for content
+    doc.setTextColor('#000000'); 
     doc.text(doc.splitTextToSize(report.mainComplaint, 170), margin + 40, y);
     y += doc.splitTextToSize(report.mainComplaint, 170).length * 5;
     y += 5;
 
 
-    // --- Section II: Analysis & Findings ---
+    //  Analysis & Findings ---
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor('#4a4a4a');
@@ -161,7 +161,7 @@ export default function GenerateReport({ sessionId, messages, doctorProfile }: P
     doc.text(`Symptoms: ${report.symptoms.join(", ")}`, margin, y); y += 8;
     doc.text(`Medications Mentioned: ${report.medicationsMentioned.join(", ") || "None"}`, margin, y); y += 15;
 
-    // --- Section III: Recommendations ---
+    //  Recommendations ---
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor('#4a4a4a');
@@ -180,7 +180,7 @@ export default function GenerateReport({ sessionId, messages, doctorProfile }: P
     setTimeout(() => {
       doc.save(`medical-report-${report.sessionId}.pdf`);
       setIsGenerating(false);
-    }, 500); // Slight delay for UX
+    }, 500); 
 
   };
 

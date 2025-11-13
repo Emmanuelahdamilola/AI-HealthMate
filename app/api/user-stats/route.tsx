@@ -1,69 +1,84 @@
-// app/api/user-stats/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
 import { database } from "@/config/database";
 import { sessionChatTable, usersTable } from "@/config/userSchema";
-// Drizzle imports: Added 'sql' for the count aggregate function
-import { eq, desc, sql } from "drizzle-orm"; 
+import { eq, desc, sql } from "drizzle-orm";
 import { getFirebaseUser } from "@/lib/firebase-auth";
+import { rateLimiter } from "@/lib/rateLimiter";
 
-export const GET = async (req: NextRequest) => {
-    try {
-        // 1️⃣ Authenticate user
-        const firebaseUser = await getFirebaseUser(req);
-        if (!firebaseUser?.email) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+export async function GET(req: NextRequest) {
+  if (!rateLimiter(req)) {
+    return NextResponse.json({ 
+      success: false, 
+      error: 'Too many requests' 
+    }, { status: 429 });
+  }
 
-        // 2️⃣ Get user from DB
-        const dbUser = await database
-            .select({ id: usersTable.id }) // Select only the ID for efficiency
-            .from(usersTable)
-            .where(eq(usersTable.email, firebaseUser.email))
-            .then((res) => res[0]);
-
-        if (!dbUser) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
-        }
-
-        const userId = dbUser.id;
-
-        // 3️⃣ Consolidated Total Count (Total Consultations & History Count)
-        // Use Drizzle's count aggregate for maximum efficiency
-        const totalConsultationsResult = await database
-            .select({ count: sql<number>`count(*)` })
-            .from(sessionChatTable)
-            .where(eq(sessionChatTable.userId, userId));
-            
-        // CRITICAL FIX: The count function returns the count as a string in some SQL dialects,
-        // so we ensure it's a number.
-        const totalConsultations = parseInt(totalConsultationsResult[0]?.count as unknown as string) || 0;
-        const patientHistoryCount = totalConsultations; // These two metrics are the same
-
-        // 4️⃣ Last Consultation
-        // Select only the fields needed by the frontend dashboard (sessionId and date)
-        const lastConsultationResult = await database
-            .select({
-                sessionId: sessionChatTable.sessionId,
-                createdOn: sessionChatTable.createdOn,
-            })
-            .from(sessionChatTable)
-            .where(eq(sessionChatTable.userId, userId))
-            .orderBy(desc(sessionChatTable.createdOn))
-            .limit(1);
-
-        // Trimming the result to either the object or null
-        const lastConsultation = lastConsultationResult[0] || null;
-
-        // 5️⃣ Return stats
-        return NextResponse.json({
-            totalConsultations,
-            lastConsultation,
-            patientHistoryCount, // Same value, but kept for matching frontend prop
-        });
-
-    } catch (err: any) {
-        console.error("❌ user-stats GET error:", err.message || err);
-        return NextResponse.json({ error: "Failed to fetch stats" }, { status: 500 });
+  try {
+    // Authenticate user
+    const firebaseUser = await getFirebaseUser(req);
+    if (!firebaseUser?.email) {
+      return NextResponse.json({ 
+        error: "Unauthorized" 
+      }, { status: 401 });
     }
-};
+
+    // Get user from database
+    const dbUser = await database
+      .select({ id: usersTable.id })
+      .from(usersTable)
+      .where(eq(usersTable.email, firebaseUser.email))
+      .then((res) => res[0]);
+
+    if (!dbUser) {
+      return NextResponse.json({ 
+        error: "User not found" 
+      }, { status: 404 });
+    }
+
+    const userId = dbUser.id;
+
+    // Get total consultations count
+    const totalConsultationsResult = await database
+      .select({ count: sql<number>`cast(count(*) as integer)` })
+      .from(sessionChatTable)
+      .where(eq(sessionChatTable.userId, userId));
+    
+    const totalConsultations = totalConsultationsResult[0]?.count || 0;
+
+    //Get last consultation
+    const lastConsultationResult = await database
+      .select({
+        sessionId: sessionChatTable.sessionId,
+        createdOn: sessionChatTable.createdOn,
+        selectedDoctor: sessionChatTable.selectedDoctor,
+        note: sessionChatTable.note,
+      })
+      .from(sessionChatTable)
+      .where(eq(sessionChatTable.userId, userId))
+      .orderBy(desc(sessionChatTable.createdOn))
+      .limit(1);
+
+    const lastConsultation = lastConsultationResult[0] || null;
+
+    // Get completed consultations (with reports)
+    const completedResult = await database
+      .select({ count: sql<number>`cast(count(*) as integer)` })
+      .from(sessionChatTable)
+      .where(eq(sessionChatTable.userId, userId));
+
+    // Return stats matching the Stats interface (gracefully handle new users with 0 consultations)
+    return NextResponse.json({
+      totalConsultations: totalConsultations,
+      lastConsultation: lastConsultation,
+      patientHistoryCount: totalConsultations,
+    });
+
+  } catch (err: any) {
+    console.error("❌ user-stats GET error:", err.message || err);
+    return NextResponse.json({ 
+      error: "Failed to fetch stats",
+      details: err.message 
+    }, { status: 500 });
+  }
+}

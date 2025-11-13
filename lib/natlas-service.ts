@@ -1,14 +1,9 @@
-// lib/natlas-service.ts
-// Service to interact with your N-ATLAS API - TIMEOUT FIXED VERSION
 
 const NATLAS_API_URL = process.env.NEXT_PUBLIC_NATLAS_API_URL || 'https://natlas-api.onrender.com';
 
-// ✅ INCREASED TIMEOUT: 30s for Render cold starts (was 10s)
+
 const FETCH_TIMEOUT = 30000; 
 
-// ============================================================================
-// TYPE INTERFACES
-// ============================================================================
 
 export interface NatlasAnalysisResponse {
   success: boolean;
@@ -34,13 +29,6 @@ export interface NatlasQuickSymptomsResponse {
   match_type: string;
 }
 
-// ============================================================================
-// HELPER: Fetch with timeout and retry
-// ============================================================================
-
-/**
- * Fetch with AbortController timeout
- */
 async function fetchWithTimeout(
   url: string,
   options: RequestInit,
@@ -65,14 +53,6 @@ async function fetchWithTimeout(
   }
 }
 
-// ============================================================================
-// API SERVICE FUNCTIONS
-// ============================================================================
-
-/**
- * Analyze patient notes using N-ATLAS API.
- * ✅ NOW WITH: Timeout handling, retry logic, better error messages
- */
 export async function analyzePatientNotes(
   text: string,
   language?: string
@@ -121,14 +101,11 @@ export async function analyzePatientNotes(
     }
   }
 
-  // All retries failed
+  
   console.error('❌ N-ATLAS all retries failed');
   throw lastError || new Error('N-ATLAS analysis failed after retries');
 }
 
-/**
- * Quick symptom extraction for faster processing.
- */
 export async function extractSymptoms(
   text: string,
   language?: string
@@ -155,26 +132,20 @@ export async function extractSymptoms(
   }
 }
 
-/**
- * Enhanced analysis specifically for doctor suggestion.
- */
+
 export async function analyzeForDoctorSuggestion(
   text: string,
   language?: string
 ): Promise<NatlasAnalysisResponse> {
-  return analyzePatientNotes(text, language); // Reuse with retry logic
+  return analyzePatientNotes(text, language);
 }
 
-/**
- * Check if N-ATLAS API is healthy.
- * ✅ Now with timeout
- */
 export async function checkNatlasHealth(): Promise<boolean> {
   try {
     const response = await fetchWithTimeout(
       `${NATLAS_API_URL}/health`,
       { method: 'GET' },
-      5000 // Short timeout for health check
+      5000 
     );
     
     const data = await response.json();

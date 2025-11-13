@@ -1,48 +1,3 @@
-// 'use client';
-
-// import React, { createContext, useState, useEffect } from "react";
-// import { onAuthStateChanged, User } from "firebase/auth";
-// import { auth } from "@/lib/firebase";   
-// import axios from "axios";
-
-// export const UserDetailContext = createContext<any>(undefined);
-
-// export const UserDetailProvider = ({ children }: { children: React.ReactNode }) => {
-//   const [user, setUser] = useState<User | null>(null);
-//   const [userDetail, setUserDetail] = useState<any>(null);
-
-//   useEffect(() => {
-//     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-//       setUser(firebaseUser);
-//       if (firebaseUser) {
-//         createNewUser(firebaseUser);
-//       }
-//     });
-//     return () => unsubscribe();
-//   }, []);
-
-//   const createNewUser = async (firebaseUser: User) => {
-//     try {
-//       const token = await firebaseUser.getIdToken();
-//       const res = await axios.post(
-//         "/api/users",
-//         {},
-//         { headers: { Authorization: `Bearer ${token}` } }
-//       );
-//       setUserDetail(res.data);
-//     } catch (err) {
-//       console.error("Failed to create user:", err);
-//     }
-//   };
-
-//   return (
-//     <UserDetailContext.Provider value={{ user, userDetail, setUserDetail }}>
-//       {children}
-//     </UserDetailContext.Provider>
-//   );
-// };
-
-
 "use client";
 
 import React, { createContext, useState, useEffect, ReactNode } from "react";
@@ -50,8 +5,8 @@ import { onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import axios from "axios";
 
-// Define the type for your context
 interface UsersDetail {
+  id: number;
   name: string;
   email: string;
   photoURL?: string | null;
@@ -61,6 +16,8 @@ interface UserDetailContextType {
   user: User | null;
   userDetail: UsersDetail | null;
   setUserDetail: React.Dispatch<React.SetStateAction<UsersDetail | null>>;
+  loading: boolean;
+  refreshUser: () => Promise<void>;
 }
 
 export const UserDetailContext = createContext<UserDetailContextType | undefined>(undefined);
@@ -68,44 +25,77 @@ export const UserDetailContext = createContext<UserDetailContextType | undefined
 export const UserDetailProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userDetail, setUserDetail] = useState<UsersDetail | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Monitor Firebase auth state
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      console.log('🔐 Auth state changed:', firebaseUser?.email);
       setUser(firebaseUser);
+      
       if (firebaseUser) {
-        createOrFetchUser(firebaseUser);
+        await createOrFetchUser(firebaseUser);
       } else {
         setUserDetail(null);
       }
+      
+      setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
 
-  // Create or fetch user from your database
   const createOrFetchUser = async (firebaseUser: User) => {
     try {
-      const token = await firebaseUser.getIdToken();
+      console.log('📥 Fetching user details...');
+      
+      const token = await firebaseUser.getIdToken(true);
+      
       const res = await axios.post(
         "/api/users",
-        {}, // empty body since server reads token
+        {}, 
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 10000 
         }
       );
-       setUserDetail({
-      name: res.data.name,
-      email: res.data.email,
-      photoURL: res.data.photoURL || null,
-    });
-    } catch (err) {
-      console.error("Failed to create/fetch user:", err);
+
+      console.log('✅ User details fetched:', res.data.email);
+
+      setUserDetail({
+        id: res.data.id,
+        name: res.data.name || firebaseUser.displayName || '',
+        email: res.data.email,
+        photoURL: res.data.photoURL || firebaseUser.photoURL || null,
+      });
+
+    } catch (err: any) {
+      console.error("❌ Failed to create/fetch user:", err.response?.data || err.message);
+      
+      if (err.response?.status === 401) {
+        console.error('🔴 Authentication failed - signing out');
+        await auth.signOut();
+      }
+    }
+  };
+
+
+  const refreshUser = async () => {
+    if (user) {
+      await createOrFetchUser(user);
     }
   };
 
   return (
-    <UserDetailContext.Provider value={{ user, userDetail, setUserDetail }}>
+    <UserDetailContext.Provider value={{ 
+      user, 
+      userDetail, 
+      setUserDetail, 
+      loading,
+      refreshUser 
+    }}>
       {children}
     </UserDetailContext.Provider>
   );

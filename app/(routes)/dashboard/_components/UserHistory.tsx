@@ -1,14 +1,12 @@
 'use client';
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { toast } from 'sonner';
-import { X, Calendar, User, Zap, Activity, Download, Loader2 } from 'lucide-react';
+import { X, Calendar, Zap, Activity, Download, Loader2 } from 'lucide-react';
 import jsPDF from 'jspdf';
-
 
 interface ReportFields {
     severity: string;
@@ -20,10 +18,12 @@ interface ReportFields {
     user: string;
     mainComplaint: string;
 }
+
 interface DoctorFields {
     name: string;
     specialty: string;
 }
+
 interface SessionParams {
     sessionId: string;
     createdOn: string;
@@ -33,7 +33,6 @@ interface SessionParams {
     conversation?: any[];
     id?: number;
 }
-
 
 type Props = {
   history: SessionParams[]
@@ -45,26 +44,54 @@ export default function UserHistory({ history }: Props) {
   const [selectedSession, setSelectedSession] = useState<SessionParams | null>(null);
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
 
-  // --- Data Fetching ---
+  //  Better error handling and empty state management
   useEffect(() => {
     const fetchHistory = async (user: any, token: string) => {
       try {
-        // NOTE: Backend route must be configured to return ALL sessions when passed 'history=true'
+        console.log(' Fetching user history...');
+        
         const result = await axios.get('/api/voice-chat?history=true', { 
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        // The API returns { success: true, data: [{ session1 }, { session2 }, ...] }
-        const data: SessionParams[] = Array.isArray(result.data.data) ? result.data.data : [];
-        
-        // Sort history by creation date, newest first
-        data.sort((a, b) => new Date(b.createdOn).getTime() - new Date(a.createdOn).getTime());
+        console.log(' History fetched:', result.data);
 
-        setHistoryData(data);
-      } catch (err) {
-        console.error('Error fetching session history:', err);
-        toast.error('Failed to fetch your medical history. Please try again.');
-        setHistoryData([]);
+        // Handle both success response formats
+        if (result.data.success) {
+          const data: SessionParams[] = Array.isArray(result.data.data) 
+            ? result.data.data 
+            : [];
+          
+          // Sort by date, newest first
+          data.sort((a, b) => 
+            new Date(b.createdOn).getTime() - new Date(a.createdOn).getTime()
+          );
+
+          setHistoryData(data);
+          
+          if (data.length === 0) {
+            console.log('No consultation history found for user');
+          }
+        } else {
+          throw new Error(result.data.error || 'Failed to fetch history');
+        }
+
+      } catch (err: any) {
+        console.error(' Error fetching session history:', err);
+        
+        // Don't show error toast for empty history or auth issues
+        if (err.response?.status === 404) {
+          console.log(' No history found (404) - treating as empty');
+          setHistoryData([]);
+        } else if (err.response?.status === 401) {
+          console.log(' Unauthorized - will be handled by auth check');
+          setHistoryData([]);
+        } else {
+          // Only show error for actual server/network issues
+          console.error('Server error:', err.response?.status);
+          toast.error('Unable to load consultation history. Please refresh the page.');
+          setHistoryData([]);
+        }
       } finally {
         setLoading(false);
       }
@@ -75,7 +102,9 @@ export default function UserHistory({ history }: Props) {
         user.getIdToken().then(token => fetchHistory(user, token));
       } else {
         setLoading(false);
-        toast.error('You must be signed in to view your medical history.', { duration: 3500 });
+        toast.error('You must be signed in to view your medical history.', { 
+          duration: 3500 
+        });
       }
     });
 
@@ -187,7 +216,6 @@ export default function UserHistory({ history }: Props) {
     }
   }
 
-
   // --- Render Loading State ---
   if (loading) {
     return (
@@ -214,22 +242,32 @@ export default function UserHistory({ history }: Props) {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="w-full max-w-2xl mx-auto px-6 py-10 flex flex-col items-center justify-center text-center 
+        className="w-full max-w-2xl mx-auto px-8 py-16 flex flex-col items-center justify-center text-center 
           bg-gradient-to-b from-gray-900/40 to-gray-900/80 rounded-2xl shadow-lg border border-purple-500/20"
       >
-        <Image
-          src="/assistant-doctors.png"
-          width={180}
-          height={180}
-          alt="No History"
-          className="mb-6 opacity-80"
-        />
-        <h2 className="text-2xl font-semibold text-cyan-400 mb-2">
-          No Consultation History Found
+        {/* Icon instead of image */}
+        <div className="w-20 h-20 rounded-full bg-purple-500/10 border-2 border-purple-500/30 flex items-center justify-center mb-6">
+          <Activity className="w-10 h-10 text-purple-400" />
+        </div>
+        
+        <h2 className="text-3xl font-bold text-cyan-400 mb-3">
+          No Consultation History Yet
         </h2>
-        <p className="text-gray-400">
-          Start an AI consultation to generate your first medical report.
+        
+        <p className="text-gray-400 text-lg mb-6 max-w-md">
+          Your medical consultation history will appear here once you complete your first session.
         </p>
+        
+        <div className="flex flex-col gap-2 text-sm text-gray-500">
+          <p className="flex items-center gap-2 justify-center">
+            <Zap className="w-4 h-4 text-cyan-400" />
+            Consultations are saved automatically
+          </p>
+          <p className="flex items-center gap-2 justify-center">
+            <Download className="w-4 h-4 text-cyan-400" />
+            Download reports as PDF anytime
+          </p>
+        </div>
       </motion.div>
     );
   }
@@ -275,7 +313,9 @@ export default function UserHistory({ history }: Props) {
                 </td>
                 <td className="py-4 px-6 text-gray-200 font-medium">
                   {session.selectedDoctor?.name || '—'}
-                  <p className="text-xs text-cyan-400 mt-0.5">{session.selectedDoctor?.specialty || '—'}</p>
+                  <p className="text-xs text-cyan-400 mt-0.5">
+                    {session.selectedDoctor?.specialty || '—'}
+                  </p>
                 </td>
                 <td className="py-4 px-6 text-center">
                   <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getSeverityStyle(getSeverity(session))}`}>
@@ -287,25 +327,25 @@ export default function UserHistory({ history }: Props) {
                 </td>
                 <td className="py-4 px-6 text-center text-sm">
                   {session.report ? (
-                      <span className="text-green-400 flex items-center justify-center gap-1">
-                          <Zap className="w-4 h-4"/> Finalized
-                      </span>
+                    <span className="text-green-400 flex items-center justify-center gap-1">
+                      <Zap className="w-4 h-4"/> Finalized
+                    </span>
                   ) : (
-                      <span className="text-yellow-400">Pending</span>
+                    <span className="text-yellow-400">Pending</span>
                   )}
                 </td>
                 <td className="py-4 px-6 text-right">
                   <button
                     onClick={() => handleDownloadReport(session)}
                     disabled={!session.report || isDownloading === session.sessionId}
-                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all disabled:opacity-30 flex items-center justify-center gap-2"
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2 ml-auto"
                   >
                     {isDownloading === session.sessionId ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
-                        <Download className="w-4 h-4" />
+                      <Download className="w-4 h-4" />
                     )}
-                    {isDownloading === session.sessionId ? 'Generating...' : 'Download Report'}
+                    {isDownloading === session.sessionId ? 'Generating...' : 'Download'}
                   </button>
                 </td>
               </motion.tr>
@@ -314,7 +354,7 @@ export default function UserHistory({ history }: Props) {
         </motion.table>
       </motion.div>
 
-      {/* 🔹 Session Detail Modal (For viewing chat transcript and raw report JSON) */}
+      {/* Session Detail Modal */}
       <AnimatePresence>
         {selectedSession && (
           <motion.div
@@ -345,58 +385,57 @@ export default function UserHistory({ history }: Props) {
               
               {/* Display Key Report Data */}
               <div className="grid grid-cols-2 gap-4 text-sm mb-6">
-                  <div className="bg-gray-800 p-3 rounded-lg">
-                      <p className="font-medium text-purple-400">Assistant:</p>
-                      <p>{selectedSession.selectedDoctor?.name} ({selectedSession.selectedDoctor?.specialty})</p>
-                  </div>
-                  <div className="bg-gray-800 p-3 rounded-lg">
-                      <p className="font-medium text-purple-400">Date:</p>
-                      <p>{new Date(selectedSession.createdOn).toLocaleString()}</p>
-                  </div>
-                  <div className={`${getSeverityStyle(selectedSession.report?.severity)} p-3 rounded-lg font-bold flex items-center justify-between`}>
-                      <p>Severity:</p>
-                      <p className="text-lg">{selectedSession.report?.severity?.toUpperCase() || 'N/A'}</p>
-                  </div>
-                  <div className="bg-gray-800 p-3 rounded-lg">
-                      <p className="font-medium text-purple-400">Main Complaint:</p>
-                      <p>{selectedSession.note}</p>
-                  </div>
+                <div className="bg-gray-800 p-3 rounded-lg">
+                  <p className="font-medium text-purple-400">Assistant:</p>
+                  <p>{selectedSession.selectedDoctor?.name} ({selectedSession.selectedDoctor?.specialty})</p>
+                </div>
+                <div className="bg-gray-800 p-3 rounded-lg">
+                  <p className="font-medium text-purple-400">Date:</p>
+                  <p>{new Date(selectedSession.createdOn).toLocaleString()}</p>
+                </div>
+                <div className={`${getSeverityStyle(selectedSession.report?.severity)} p-3 rounded-lg font-bold flex items-center justify-between`}>
+                  <p>Severity:</p>
+                  <p className="text-lg">{selectedSession.report?.severity?.toUpperCase() || 'N/A'}</p>
+                </div>
+                <div className="bg-gray-800 p-3 rounded-lg">
+                  <p className="font-medium text-purple-400">Main Complaint:</p>
+                  <p>{selectedSession.note}</p>
+                </div>
               </div>
               
-              {/* Report Section - Show Full Structured Report */}
+              {/* Report Section */}
               {selectedSession.report && (
-                  <div className="mt-4">
-                      <h3 className="font-semibold text-xl text-purple-400 mb-2">AI Generated Report</h3>
-                      <p className="text-sm text-gray-300 mb-4">
-                          {selectedSession.report.summary}
-                      </p>
+                <div className="mt-4">
+                  <h3 className="font-semibold text-xl text-purple-400 mb-2">AI Generated Report</h3>
+                  <p className="text-sm text-gray-300 mb-4">
+                    {selectedSession.report.summary}
+                  </p>
 
-                      <div className="space-y-3 bg-gray-800 p-4 rounded-lg border border-gray-700">
-                          <p className="text-cyan-400 font-medium">Keywords:</p>
-                          <p className="text-gray-300">{selectedSession.report.symptoms?.join(', ') || '—'}</p>
-                          
-                          <p className="text-cyan-400 font-medium pt-2 border-t border-gray-700">Recommendations:</p>
-                          <ul className="list-disc list-inside text-gray-300">
-                              {selectedSession.report.recommendations?.map((rec, i) => <li key={i}>{rec}</li>)}
-                          </ul>
-                      </div>
+                  <div className="space-y-3 bg-gray-800 p-4 rounded-lg border border-gray-700">
+                    <p className="text-cyan-400 font-medium">Keywords:</p>
+                    <p className="text-gray-300">{selectedSession.report.symptoms?.join(', ') || '—'}</p>
+                    
+                    <p className="text-cyan-400 font-medium pt-2 border-t border-gray-700">Recommendations:</p>
+                    <ul className="list-disc list-inside text-gray-300">
+                      {selectedSession.report.recommendations?.map((rec, i) => <li key={i}>{rec}</li>)}
+                    </ul>
                   </div>
+                </div>
               )}
               
-              {/* Conversation History (Simplified for quick viewing) */}
+              {/* Conversation History */}
               <div className="mt-8">
-                  <h3 className="font-semibold text-xl text-cyan-400 mb-3 border-b border-gray-700 pb-2">Full Chat Transcript</h3>
-                  <div className="space-y-3 max-h-64 overflow-y-auto p-3 bg-gray-900 rounded-lg">
-                      {/* Assuming conversation is an array of Message objects */}
-                      {selectedSession.conversation?.map((msg: any, i: number) => (
-                          <div key={i} className={`text-xs ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
-                              <span className={`font-bold ${msg.role === 'user' ? 'text-indigo-400' : 'text-cyan-400'}`}>
-                                  {msg.role === 'user' ? 'Patient' : selectedSession.selectedDoctor?.name}:
-                              </span>
-                              <p className="text-gray-300 break-words">{msg.content}</p>
-                          </div>
-                      ))}
-                  </div>
+                <h3 className="font-semibold text-xl text-cyan-400 mb-3 border-b border-gray-700 pb-2">Full Chat Transcript</h3>
+                <div className="space-y-3 max-h-64 overflow-y-auto p-3 bg-gray-900 rounded-lg">
+                  {selectedSession.conversation?.map((msg: any, i: number) => (
+                    <div key={i} className={`text-xs ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
+                      <span className={`font-bold ${msg.role === 'user' ? 'text-indigo-400' : 'text-cyan-400'}`}>
+                        {msg.role === 'user' ? 'Patient' : selectedSession.selectedDoctor?.name}:
+                      </span>
+                      <p className="text-gray-300 break-words">{msg.content}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </motion.div>
           </motion.div>
