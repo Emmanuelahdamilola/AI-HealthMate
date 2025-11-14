@@ -1,60 +1,61 @@
-'use client';
+// 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useContext, useEffect, useState } from 'react';
-import axios from 'axios';
-import MedicalReport from '../_components/MedicalReport';
-// Local type for session params — adjust fields or replace with a shared import if available
-type SessionParams = {
-  sessionId: string;
-  createdAt?: string;
-  [key: string]: any;
-};
-import { UserDetailContext } from '@/context/UserDetailProvider';
+// import { useRouter } from 'next/navigation';
+// import { useContext, useEffect, useState } from 'react';
+// import axios from 'axios';
+// import MedicalReport from '../_components/MedicalReport';
+// import { UserDetailContext } from '@/context/UserDetailProvider';
 
-export default function HistoryPage() {
-  const router = useRouter();
-  const context = useContext(UserDetailContext);
-  const user = context?.user;
+// type SessionParams = {
+//   sessionId: string;
+//   createdOn?: string;
+//   [key: string]: any;
+// };
 
-  const [history, setHistory] = useState<SessionParams[] | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!user) {
-      router.push('/sign-in');
-      return;
-    }
+// export default function HistoryPage() {
+//   const router = useRouter();
+//   const context = useContext(UserDetailContext);
+//   const user = context?.user;
 
-    const fetchHistory = async () => {
-      try {
-        const token = await user.getIdToken();
-        const res = await axios.get('/api/chat-session?sessionId=all', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setHistory(res.data);
-      } catch (err) {
-        console.error('Error fetching history:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+//   const [history, setHistory] = useState<SessionParams[] | null>(null);
+//   const [loading, setLoading] = useState(true);
 
-    fetchHistory();
-  }, [user, router]);
+//   useEffect(() => {
+//     if (!user) {
+//       router.push('/sign-in');
+//       return;
+//     }
 
-  if (!user || loading) {
-    return <p className="text-center mt-10 text-gray-500">Loading your consultation history...</p>;
-  }
+//     const fetchHistory = async () => {
+//       try {
+//         const token = await user.getIdToken();
+//         const res = await axios.get('/api/chat-session?sessionId=all', {
+//           headers: { Authorization: `Bearer ${token}` },
+//         });
+//         setHistory(res.data);
+//       } catch (err) {
+//         console.error('Error fetching history:', err);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
 
-  if (!history || history.length === 0) {
-    return <p className="text-center mt-10 text-gray-500">No consultation history available.</p>;
-  }
+//     fetchHistory();
+//   }, [user, router]);
 
-  return (
-    <div>
-      <h2 className="text-xl font-semibold mb-4">Your Consultation History</h2>
-      <MedicalReport history={history} />
-    </div>
-  );
-}
+//   if (!user || loading) {
+//     return <p className="text-center mt-10 text-gray-500">Loading your consultation history...</p>;
+//   }
+
+//   if (!history || history.length === 0) {
+//     return <p className="text-center mt-10 text-gray-500">No consultation history available.</p>;
+//   }
+
+//   return (
+//     <div>
+//       <h2 className="text-xl font-semibold mb-4">Your Consultation History</h2>
+//       <MedicalReport history={history} />
+//     </div>
+//   );
+// }

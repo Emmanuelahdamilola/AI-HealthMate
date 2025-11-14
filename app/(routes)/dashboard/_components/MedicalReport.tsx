@@ -15,7 +15,7 @@ import { motion } from 'framer-motion'
 import jsPDF from 'jspdf'
 import { Download, Loader2 } from 'lucide-react'
 
-// ✅ Define the types directly here instead of importing
+
 interface DoctorProfile {
   name: string;
   specialty: string;
