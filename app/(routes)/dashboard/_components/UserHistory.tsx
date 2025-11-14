@@ -35,26 +35,34 @@ interface SessionParams {
 }
 
 type Props = {
-  history: SessionParams[]
+  history?: SessionParams[] // ✅ Made optional
 }
 
-export default function UserHistory({ history }: Props) {
-  const [historyData, setHistoryData] = useState<SessionParams[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function UserHistory({ history: propHistory }: Props) {
+  const [historyData, setHistoryData] = useState<SessionParams[]>(propHistory || []);
+  const [loading, setLoading] = useState(!propHistory); // ✅ Skip loading if prop provided
   const [selectedSession, setSelectedSession] = useState<SessionParams | null>(null);
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
 
-  //  Better error handling and empty state management
+  // ✅ Fetch history only if not provided via props
   useEffect(() => {
+    // If history was provided via props, use it and skip fetch
+    if (propHistory) {
+      setHistoryData(propHistory);
+      setLoading(false);
+      return;
+    }
+
+    // Otherwise, fetch from API
     const fetchHistory = async (user: any, token: string) => {
       try {
-        console.log(' Fetching user history...');
+        console.log('📊 Fetching user history...');
         
         const result = await axios.get('/api/voice-chat?history=true', { 
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        console.log(' History fetched:', result.data);
+        console.log('✅ History fetched:', result.data);
 
         // Handle both success response formats
         if (result.data.success) {
@@ -70,25 +78,25 @@ export default function UserHistory({ history }: Props) {
           setHistoryData(data);
           
           if (data.length === 0) {
-            console.log('No consultation history found for user');
+            console.log('ℹ️ No consultation history found for user');
           }
         } else {
           throw new Error(result.data.error || 'Failed to fetch history');
         }
 
       } catch (err: any) {
-        console.error(' Error fetching session history:', err);
+        console.error('❌ Error fetching session history:', err);
         
         // Don't show error toast for empty history or auth issues
         if (err.response?.status === 404) {
-          console.log(' No history found (404) - treating as empty');
+          console.log('ℹ️ No history found (404) - treating as empty');
           setHistoryData([]);
         } else if (err.response?.status === 401) {
-          console.log(' Unauthorized - will be handled by auth check');
+          console.log('🔒 Unauthorized - will be handled by auth check');
           setHistoryData([]);
         } else {
           // Only show error for actual server/network issues
-          console.error('Server error:', err.response?.status);
+          console.error('⚠️ Server error:', err.response?.status);
           toast.error('Unable to load consultation history. Please refresh the page.');
           setHistoryData([]);
         }
@@ -109,7 +117,7 @@ export default function UserHistory({ history }: Props) {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [propHistory]); // ✅ Added propHistory to dependencies
   
   // --- Helpers ---
   const getSeverityStyle = (severity: string | undefined) => {

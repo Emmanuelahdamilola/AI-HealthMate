@@ -183,7 +183,7 @@ export default function SignUp() {
             transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
           >
             <h2 className="text-4xl font-extrabold mb-2 text-center bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-400">
-              AI Healthmate Portal
+              AI Healthmate
             </h2>
             <p className="text-center text-gray-300 mb-8">
               Create an account to begin your secure consultations.
