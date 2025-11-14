@@ -192,7 +192,7 @@ export default function VoiceConsultation() {
               .then(() => console.log('✅ Audio playing'))
               .catch((e) => {
                 console.error('❌ Play failed:', e);
-                audio.onended(new Event('ended')); // Trigger ended handler
+                audio.dispatchEvent(new Event('ended'));
               });
           }
         } else {
