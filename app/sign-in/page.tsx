@@ -257,7 +257,7 @@ export default function SignIn() {
         transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
       >
         <h2 className="text-4xl font-extrabold mb-2 text-center bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-400">
-          N-ATLAS Portal
+          AI HealthMate
         </h2>
         <p className="text-center text-gray-300 mb-8">
           Access your secure medical consultation.
@@ -334,7 +334,7 @@ export default function SignIn() {
                 disabled={loading}
                 className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-bold transition-all duration-300 shadow-xl"
               >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Sign In Securely"}
+                {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Sign In"}
               </button>
             </form>
           </motion.div>

@@ -52,7 +52,6 @@ export default function Home() {
 
       {/* ===== HERO SECTION ===== */}
       <section className="relative overflow-hidden bg-gradient-to-b from-[#050B1A] to-[#0C142C] text-white pt-28 pb-24 px-6 flex flex-col md:flex-row items-center justify-between min-h-[calc(100vh-6rem)]">
-        {/* Decorative Grid Overlay (Subtle) */}
 
         <div className="absolute inset-0 z-0 opacity-10 pointer-events-none" 
               style={{ backgroundSize: '300px' }}>
@@ -60,19 +59,18 @@ export default function Home() {
           <div className="w-full h-full bg-repeat" style={{ backgroundImage: 'radial-gradient(#0c142c 1px, transparent 0)', backgroundSize: '20px 20px', opacity: 0.3 }}></div>
         </div>
 
-        {/* Left: Text Content */}
         <div className="max-w-xl text-center md:text-left space-y-6 z-10 p-4 md:p-8">
-          <motion.h1
+          <motion.h2
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-4xl md:text-6xl font-extrabold leading-tight"
+            className="text-4xl md:text-6xl font-bold leading-tight"
           >
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-500">
               Your AI-Powered Health Companion
             </span>{" "}
             for Smarter Well-being
-          </motion.h1>
+          </motion.h2>
 
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -97,9 +95,7 @@ export default function Home() {
           </motion.button>
         </div>
 
-        {/* Right: AI Robot + Circuit */}
         <div className="relative mt-16 md:mt-0 flex justify-center items-center md:w-1/2 min-h-[300px]">
-          {/* Animated Cyber Ring behind Robot */}
           <motion.div 
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -113,7 +109,6 @@ export default function Home() {
             className="absolute w-72 h-72 border-4 border-indigo-500/40 rounded-full animate-spin-slow -z-10"
           ></motion.div>
 
-          {/* AI Robot - NOTE: Ensure /ai-robot.png exists in your public folder! */}
           <motion.img
             initial={{ opacity: 0, y: 80, rotateY: 90 }}
             animate={{ opacity: 1, y: 0, rotateY: 0 }}
@@ -124,11 +119,10 @@ export default function Home() {
           />
         </div>
 
-        {/* Background Soft Glow - Larger for impact */}
         <div className="absolute inset-0 -z-20 bg-gradient-radial from-cyan-500/10 via-transparent to-transparent blur-3xl opacity-80" />
       </section>
 
-      {/* ===== WHY CHOOSE SECTION (ICONS USED INSTEAD OF PLACEHOLDERS) ===== */}
+      {/* ===== WHY CHOOSE SECTION  ===== */}
       <section className="py-20 px-6 bg-[#0b102d]/60 text-center">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
@@ -137,7 +131,7 @@ export default function Home() {
           viewport={{ once: true, amount: 0.5 }}
           className="text-4xl md:text-5xl font-extrabold mb-16 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-cyan-400"
         >
-          Why Choose <span className="drop-shadow-lg">AI HealthMate?</span>
+          Why Choose AI HealthMate?
         </motion.h2>
 
         <motion.div 
@@ -149,22 +143,22 @@ export default function Home() {
         >
           {[
             {
-              icon: Zap, // Smart Integration
+              icon: Zap, 
               title: "Smart Integration",
               text: "Connect seamlessly with modern healthcare systems and APIs.",
             },
             {
-              icon: Brain, // Cutting-edge AI
+              icon: Brain,
               title: "Cutting-edge AI",
               text: "Uses state-of-the-art models for speech and symptom recognition.",
             },
             {
-              icon: Stethoscope, // Reliable Insights
+              icon: Stethoscope,
               title: "Reliable Insights",
               text: "Backed by medical data and WHO standards for consistency.",
             },
             {
-              icon: Lock, // Privacy First
+              icon: Lock, 
               title: "Privacy First",
               text: "All health interactions are end-to-end encrypted and secured.",
             },
@@ -174,7 +168,7 @@ export default function Home() {
               variants={itemVariants}
               className="p-8 bg-[#0f1538]/80 rounded-2xl shadow-xl border border-cyan-700/30 hover:shadow-cyan-500/20 hover:scale-[1.02] transition-transform duration-300 flex flex-col items-center"
             >
-              {/* Use the Lucide Icon component */}
+              
               <item.icon className="w-16 h-16 text-cyan-400 mb-6 p-2 rounded-full bg-cyan-900/40" strokeWidth={1.5} />
               <h3 className="text-2xl font-semibold mb-3 text-cyan-400">
                 {item.title}
@@ -185,7 +179,6 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* ===== HOW IT WORKS (ICONS USED INSTEAD OF PLACEHOLDERS) ===== */}
       <section className="py-24 px-6 text-center bg-gradient-to-b from-[#0b102d] to-[#050a1f]">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
@@ -194,7 +187,7 @@ export default function Home() {
           viewport={{ once: true, amount: 0.5 }}
           className="text-4xl md:text-5xl font-extrabold mb-16 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400"
         >
-          How <span className="drop-shadow-lg">AI HealthMate</span> Works
+          How AI HealthMate Works
         </motion.h2>
         
         <motion.div 
@@ -242,7 +235,7 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* ===== SERVICES SECTION (ICONS USED INSTEAD OF IMAGE COMPONENTS) ===== */}
+      {/* ===== SERVICES SECTION  ===== */}
       <section className="py-24 px-6 text-center bg-[#070c2b]">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
@@ -251,7 +244,7 @@ export default function Home() {
           viewport={{ once: true, amount: 0.5 }}
           className="text-4xl md:text-5xl font-extrabold mb-16 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-400"
         >
-          Explore Our <span className="drop-shadow-lg">AI Services</span>
+          Explore Our AI Services 
         </motion.h2>
 
         <motion.div 
@@ -263,17 +256,17 @@ export default function Home() {
         >
           {[
             {
-              icon: Activity, // AI Symptom Checker - replaced img and using icon
+              icon: Activity,
               title: "AI Symptom Checker",
               desc: "Get instant analysis and guidance from our AI health assistant, powered by comprehensive medical data.",
             },
             {
-              icon: Mic, // Voice Consultation - replaced img and using icon
+              icon: Mic, 
               title: "Voice Consultation",
               desc: "Engage in natural conversations with AI to receive insights and seamlessly connect with medical doctors.",
             },
             {
-              icon: BarChart3, // Health Data Dashboard - replaced img and using icon
+              icon: BarChart3, 
               title: "Personalized Health Dashboard",
               desc: "Track your health records, view AI-driven summaries, and receive proactive health predictions.",
             },
@@ -283,7 +276,7 @@ export default function Home() {
               variants={itemVariants}
               className="bg-[#10163d]/80 rounded-2xl shadow-xl border border-cyan-700/30 overflow-hidden hover:shadow-cyan-500/20 hover:-translate-y-2 transition-transform duration-300"
             >
-              {/* 🚨 FIX: Replaced Image component with Icon for robustness and better visual consistency. */}
+              
               <div className="w-full h-40 bg-cyan-800/30 flex items-center justify-center p-6 border-b border-cyan-700/50">
                   <service.icon className="w-20 h-20 text-cyan-400 p-2 rounded-full bg-cyan-600/20" strokeWidth={1.5} />
               </div>
@@ -298,7 +291,7 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* ===== TESTIMONIALS (ICONS ADDED FOR CONTEXT) ===== */}
+      {/* ===== TESTIMONIALS ===== */}
       <section className="py-24 px-6 bg-gradient-to-b from-[#0a0f2c] to-[#030615] text-center">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
@@ -307,7 +300,7 @@ export default function Home() {
           viewport={{ once: true, amount: 0.5 }}
           className="text-4xl md:text-5xl font-extrabold mb-16 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400"
         >
-          What Our Users <span className="drop-shadow-lg">Are Saying</span>
+          What Our Users Are Saying
         </motion.h2>
         
         <motion.div 
@@ -321,17 +314,17 @@ export default function Home() {
             {
               name: "Dr. Anya Sharma",
               text: "AI HealthMate has revolutionized my patient interactions. The insights are incredibly helpful, and the system is intuitive.",
-              icon: Stethoscope, // Doctor
+              icon: Stethoscope, 
             },
             {
               name: "Emmanuel Obi",
               text: "The voice recognition is phenomenal! I can speak naturally about my symptoms, and AI HealthMate understands perfectly.",
-              icon: Users, // General User
+              icon: Users,
             },
             {
               name: "Sophia Martinez",
               text: "Knowing my health data is secure and accessible, with AI assistance, gives me immense peace of mind.",
-              icon: Shield, // Security/Peace of Mind
+              icon: Shield, 
             },
           ].map((t, i) => (
             <motion.div
@@ -347,10 +340,8 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* ===== CTA SECTION (REMOVED FAILING SVG URL) ===== */}
+      {/* ===== CTA SECTION ===== */}
       <section className="py-20 px-6 bg-gradient-to-r from-blue-700 to-indigo-800 text-center relative overflow-hidden">
-        {/* Animated particles for cyber effect (REMOVED FAILING SVG URL) */}
-        {/* 🚨 FIX: Removed `url("/cyber-particles.svg")` reference that might be missing */}
         <div className="absolute inset-0 z-0 opacity-20 pointer-events-none" 
               style={{ backgroundSize: 'contain' }}></div>
         
@@ -424,7 +415,6 @@ export default function Home() {
         </p>
       </footer>
 
-      {/* Floating Animation Style (Removed unused flowParticles keyframe) */}
       <style jsx global>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px); }

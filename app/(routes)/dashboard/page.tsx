@@ -26,7 +26,7 @@ export default function Dashboard() {
 
   const menuItems = [
     { name: "Dashboard", key: "dashboard" },
-    { name: "My Sessions", key: "sessions" },
+    { name: "Start Session", key: "sessions" },
     { name: "Doctors", key: "doctors" },
     { name: "My History", key: "history" },
     { name: "Profile", key: "profile" },

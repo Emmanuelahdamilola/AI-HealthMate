@@ -203,24 +203,24 @@ export default function DashboardPage({ stats, onStartConsultation }: DashboardP
     const recs: string[] = [];
 
     if (lastSeverity === 'severe') {
-      recs.push('🚨 Your last consultation showed severe symptoms. Please follow up with a healthcare provider immediately.');
+      recs.push(' Your last consultation showed severe symptoms. Please follow up with a healthcare provider immediately.');
     }
 
     if (symptoms.length > 5) {
-      recs.push('📊 You have multiple symptoms tracked. Consider scheduling a comprehensive health check-up.');
+      recs.push('You have multiple symptoms tracked. Consider scheduling a comprehensive health check-up.');
     }
 
     const severeCount = trend.find(t => t.severity === 'severe')?.count || 0;
     if (severeCount > 2) {
-      recs.push('⚠️ Multiple severe consultations detected. Ongoing monitoring recommended.');
+      recs.push('Multiple severe consultations detected. Ongoing monitoring recommended.');
     }
 
     if (symptoms.includes('fever') && symptoms.includes('cough')) {
-      recs.push('🤒 Respiratory symptoms detected. Ensure proper rest and hydration.');
+      recs.push('Respiratory symptoms detected. Ensure proper rest and hydration.');
     }
 
     if (recs.length === 0) {
-      recs.push('✅ Your health metrics look stable. Continue regular check-ins for optimal health monitoring.');
+      recs.push('Your health metrics look stable. Continue regular check-ins for optimal health monitoring.');
     }
 
     return recs;
@@ -319,7 +319,6 @@ export default function DashboardPage({ stats, onStartConsultation }: DashboardP
 
       <hr className="border-gray-700/50 my-6" />
 
-      {/* N-ATLAS Medical Insights Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -407,7 +406,7 @@ export default function DashboardPage({ stats, onStartConsultation }: DashboardP
         </motion.div>
       </motion.div>
 
-      {/* Detailed N-ATLAS Insights */}
+      {/* Insights */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -451,7 +450,7 @@ export default function DashboardPage({ stats, onStartConsultation }: DashboardP
           </button>
         </motion.div>
 
-        {/* N-ATLAS Summary */}
+        
         <motion.div
           whileHover={{ scale: 1.02 }}
           className="lg:col-span-2 bg-gradient-to-br from-indigo-900/30 to-purple-900/30 backdrop-blur-md rounded-2xl p-6 border border-indigo-500/30 shadow-xl"
@@ -468,7 +467,6 @@ export default function DashboardPage({ stats, onStartConsultation }: DashboardP
           ) : medicalInsights && medicalInsights.totalConsultations > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               
-              {/* Top 3 Keywords */}
               <div>
                 <p className="text-sm text-gray-400 mb-3 flex items-center gap-2 font-semibold">
                   <Pill className="w-4 h-4 text-pink-400" />
@@ -552,7 +550,6 @@ export default function DashboardPage({ stats, onStartConsultation }: DashboardP
 
       <hr className="border-gray-700/50 my-6" />
 
-      {/* User History - Scrollable */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
