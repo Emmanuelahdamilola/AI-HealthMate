@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Mic, Square, Loader2, Volume2, Phone, PhoneOff, ArrowLeft } from 'lucide-react';
+import { Mic, Square, Loader2, Volume2, MicOff, ArrowLeft } from 'lucide-react';
 import { getAuth, User } from 'firebase/auth';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -308,7 +308,6 @@ export default function VoiceConsultation() {
     }
   };
 
-  // 1. FIX APPLIED: Removed setIsRecording(false) from here.
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       console.log('⏹️ Stopping recording...');
@@ -468,7 +467,7 @@ export default function VoiceConsultation() {
             >
               <div className="flex items-start gap-4 mb-4">
                 <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
-                  <PhoneOff className="w-6 h-6 text-red-400" />
+                  <MicOff className="w-6 h-6 text-red-400" />
                 </div>
                 <div>
                   <h3 className="text-white font-semibold text-lg mb-2">
@@ -559,7 +558,7 @@ export default function VoiceConsultation() {
               {isProcessing ? (
                 <Loader2 className="w-10 h-10 text-white animate-spin" />
               ) : (
-                <Phone className="w-10 h-10 text-white" />
+                <Mic className="w-10 h-10 text-white" />
               )}
             </button>
 
@@ -612,7 +611,7 @@ export default function VoiceConsultation() {
             {/* Transcript */}
             <div className="bg-black/20 backdrop-blur-xl rounded-2xl border border-white/10 p-6 max-h-96 overflow-y-auto">
               <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-                <Phone className="w-4 h-4" />
+                <Mic className="w-4 h-4" />
                 Live Transcript
               </h3>
 
@@ -644,12 +643,11 @@ export default function VoiceConsultation() {
               )}
             </div>
 
-            {/* 2. FIX APPLIED: Corrected disabled logic */}
+            {/* Controls */}
             <div className="mt-8 flex items-center justify-center gap-4">
               {/* Recording Button */}
               <button
                 onClick={isRecording ? stopRecording : startRecording}
-                // FIX: Only disable if NOT recording AND one of the blocking states is active
                 disabled={!isRecording && (!canRecord || isProcessing || !!currentAudio)}
                 className={`w-20 h-20 rounded-full flex items-center justify-center transition-all shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed ${
                   isRecording
@@ -669,7 +667,7 @@ export default function VoiceConsultation() {
                 onClick={endCall}
                 className="w-16 h-16 rounded-full bg-gradient-to-br from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 shadow-2xl shadow-red-500/50 flex items-center justify-center transition-all"
               >
-                <PhoneOff className="w-7 h-7 text-white" />
+                <MicOff className="w-7 h-7 text-white" />
               </button>
             </div>
 
