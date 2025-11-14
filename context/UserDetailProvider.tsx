@@ -5,11 +5,20 @@ import { onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import axios from "axios";
 
+interface Preferences {
+  darkMode: boolean;
+  emailNotifications: boolean;
+  autoSave: boolean;
+  preferredReportLanguage: 'english' | 'yoruba' | 'igbo' | 'hausa';
+  defaultConsultLanguage: 'english' | 'yoruba' | 'igbo' | 'hausa';
+}
+
 interface UsersDetail {
   id: number;
   name: string;
   email: string;
   photoURL?: string | null;
+  preferences?: Preferences;
 }
 
 interface UserDetailContextType {
