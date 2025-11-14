@@ -48,18 +48,18 @@ export default function Dashboard() {
       try {
         const user = getAuth().currentUser;
         if (!user) {
-          console.log('ℹ️ No user logged in');
+          console.log('ℹNo user logged in');
           return;
         }
 
-        console.log('📊 Fetching user stats...');
+        console.log(' Fetching user stats...');
         
         const token = await user.getIdToken();
         const res = await axios.get("/api/user-stats", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        console.log('✅ Stats fetched:', res.data);
+        console.log(' Stats fetched:', res.data);
         setStats(res.data);
         
       } catch (err: any) {

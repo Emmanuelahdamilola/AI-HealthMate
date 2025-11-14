@@ -66,7 +66,7 @@ export default function DashboardPage({ stats, onStartConsultation }: DashboardP
   const [medicalInsights, setMedicalInsights] = useState<MedicalInsights | null>(null);
   const [insightsLoading, setInsightsLoading] = useState(true);
 
-  // Fetch and analyze medical insights
+
   useEffect(() => {
     const fetchMedicalInsights = async () => {
       if (!user) return;
@@ -92,7 +92,7 @@ export default function DashboardPage({ stats, onStartConsultation }: DashboardP
     fetchMedicalInsights();
   }, [user]);
 
-  // Analyze sessions to extract medical insights
+
   const analyzeSessions = (sessions: ConsultationSession[]): MedicalInsights => {
     if (sessions.length === 0) {
       return {
@@ -156,7 +156,7 @@ export default function DashboardPage({ stats, onStartConsultation }: DashboardP
       .slice(0, 3)
       .map(([doctor, count]) => ({ doctor, count }));
 
-    // Calculate health metrics
+   
     const severityValues = { mild: 1, moderate: 2, severe: 3, none: 0 };
     const avgSeverityScore = severityTrend.length > 0
       ? severityTrend.reduce((sum, { severity, count }) => {
@@ -168,15 +168,15 @@ export default function DashboardPage({ stats, onStartConsultation }: DashboardP
     const avgSeverity =
       avgSeverityScore <= 1 ? 'mild' : avgSeverityScore <= 2 ? 'moderate' : 'severe';
 
-    // Calculate health score (100 = perfect, lower = more issues)
+    
     const healthScore = Math.max(0, 100 - (avgSeverityScore * 20) - (recentSymptoms.length * 2));
     
-    // Determine risk level
+    
     const riskLevel: 'low' | 'medium' | 'high' = 
       lastSeverity === 'severe' || healthScore < 50 ? 'high' :
       lastSeverity === 'moderate' || healthScore < 75 ? 'medium' : 'low';
 
-    // Generate recommendations
+    
     const recommendations = generateRecommendations(lastSeverity, recentSymptoms, severityTrend);
 
     return {
@@ -258,7 +258,7 @@ export default function DashboardPage({ stats, onStartConsultation }: DashboardP
     }
   };
 
-  const statItems = [
+const statItems = [
     {
       title: "Total Consultations",
       value: stats?.totalConsultations ?? 0,
@@ -267,7 +267,7 @@ export default function DashboardPage({ stats, onStartConsultation }: DashboardP
     },
     {
       title: "Health Score",
-      value: insightsLoading ? "..." : `${medicalInsights?.healthScore || 100}%`,
+      value: insightsLoading ? "..." : `${Math.round(medicalInsights?.healthScore || 100)}%`,
       icon: Activity,
       color: "purple"
     },
